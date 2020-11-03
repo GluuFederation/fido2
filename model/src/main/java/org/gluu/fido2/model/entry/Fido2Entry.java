@@ -26,7 +26,7 @@ public class Fido2Entry extends BaseEntry {
     @AttributeName(ignoreDuringUpdate = true, name = "oxId")
     private String id;
 
-    @AttributeName(name = "oxCodeChallenge")
+    @AttributeName(name = "oxCodeChallenge", consistency = true)
     private String challange;
 
     @AttributeName(name = "oxCodeChallengeHash")
