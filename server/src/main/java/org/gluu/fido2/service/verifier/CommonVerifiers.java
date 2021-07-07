@@ -436,14 +436,14 @@ public class CommonVerifiers {
 		}
 	}
 
-	public int verifyTimeout(JsonNode params) {
-        int timeout = 90;
+    public int verifyTimeout(JsonNode params) {
+        int timeout = 90 * 1000;
         if (params.hasNonNull("timeout")) {
-        	timeout = params.get("timeout").asInt(timeout);
+            timeout = params.get("timeout").asInt(timeout);
         }
 
         return timeout;
-	}
+    }
 
     public void verifyThatMetadataIsValid(JsonNode metadata) {
         long count = Arrays.asList(metadata.hasNonNull("aaguid"), metadata.hasNonNull("assertionScheme"), metadata.hasNonNull("attestationTypes"),
