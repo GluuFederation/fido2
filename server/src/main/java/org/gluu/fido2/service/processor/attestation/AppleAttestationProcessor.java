@@ -87,7 +87,7 @@ public class AppleAttestationProcessor implements AttestationFormatProcessor {
 	 *
 	 * Valid until 03/14/2045 @ 5:00 PM PST
 	 */
-	private static final String APPLE_WEBAUTHN_ROOT_CA = "/etc/gluu/conf/fido2/authenticator_cert/apple/";
+	private static final String APPLE_WEBAUTHN_ROOT_CA = "/etc/gluu/conf/fido2/apple/";
 
 	// @Override
 	public void process(JsonNode attStmt, AuthData authData, Fido2RegistrationData credential, byte[] clientDataHash,
