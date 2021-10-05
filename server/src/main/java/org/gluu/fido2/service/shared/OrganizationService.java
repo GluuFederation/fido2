@@ -8,9 +8,16 @@ package org.gluu.fido2.service.shared;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import org.gluu.model.ApplicationType;
+
 @ApplicationScoped
 public class OrganizationService extends org.gluu.service.OrganizationService {
 
 	private static final long serialVersionUID = -3912721745240924111L;
-	
+
+	@Override
+	public ApplicationType getApplicationType() {
+		return ApplicationType.FIDO2;
+	}
+
 }
