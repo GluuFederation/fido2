@@ -84,10 +84,7 @@ public class MdsService {
             throw new Fido2RuntimeException("Fido2 configuration not exists");
         }
 
-        String mdsAccessToken = fido2Configuration.getMdsAccessToken();
-        if (StringHelper.isEmpty(mdsAccessToken)) {
-            throw new Fido2RuntimeException("Fido2 MDS access token should be set");
-        }
+		
 
         String aaguid = deconvert(aaguidBuffer);
         
@@ -102,23 +99,10 @@ public class MdsService {
             throw new Fido2RuntimeException("Authenticator not in TOC aaguid " + aaguid);
         }
 
-        String tocEntryUrl = tocEntry.get("url").asText();
-        URI metadataUrl;
-        try {
-            metadataUrl = new URI(String.format("%s/?token=%s", tocEntryUrl, mdsAccessToken));
-            log.debug("Authenticator AAGUI {} url metadataUrl {} downloaded", aaguid, metadataUrl);
-        } catch (URISyntaxException e) {
-            throw new Fido2RuntimeException("Invalid URI in TOC aaguid " + aaguid);
-        }
+		
 
         verifyTocEntryStatus(aaguid, tocEntry);
-        String metadataHash = commonVerifiers.verifyThatFieldString(tocEntry, "hash");
-
-        log.debug("Reaching MDS at {}", tocEntryUrl);
-
-        mdsEntry = downloadMdsFromServer(aaguid, metadataUrl, metadataHash);
-
-        mdsEntries.put(aaguid, mdsEntry);
+       
         
         return mdsEntry;
     }
