@@ -173,7 +173,7 @@ public class TocService {
 				// if one of the chain certificates is revoked.
 			}
 			// the chain should be retrieved from the x5c attribute.
-			else if (certificateChain.size() > 0) {
+			else if (certificateChain.isEmpty()) {
 				// The FIDO Server SHOULD ignore the file if the chain cannot be verified or if
 				// one of the chain certificates is revoked.
 				log.info("x5c");
@@ -223,8 +223,8 @@ public class TocService {
             		} catch (IOException e) {
             			log.error("Error parsing the metadata statement",e);
             		}
-                    
-                    log.info("Added TOC entry {} from {} with status {} and timeOfLastStatusChange {} ", aaguid, path,metaDataStatement.get("statusReports") != null ? metaDataStatement.get("statusReports").findValue("status"):"No Status reports", metaDataStatement.get("timeOfLastStatusChange") != null ? metaDataStatement.get("timeOfLastStatusChange")  : "Not mentioned");
+            		JsonNode statusReports = dataMapperService.readTree(metaDataStatement.get("statusReports").toPrettyString());
+                    log.info("Added TOC entry {} from {} with status {} ", aaguid, path, statusReports != null ? statusReports.findValue("status"):"No Status reports");
                     tocEntries.put(aaguid, metaDataStatement);
                 }
 				else if (metadataEntry.hasNonNull("aaid")) {
@@ -344,13 +344,11 @@ public class TocService {
 		String mdsTocFilesFolder = fido2Configuration.getMdsTocsFolder();
 
 		Path path = FileSystems.getDefault().getPath(mdsTocFilesFolder);
-		log.info("folder "+path+" : isWritable - "+Files.isWritable(path));
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path)) {
 			Iterator<Path> iter = directoryStream.iterator();
 			while (iter.hasNext()) {
 				Path filePath = iter.next();
 				try (InputStream in = metadataUrl.openStream()) {
-					log.info(path + "/tempfile");
 					Path tempFile = Files.createTempFile(null,null);
 
 					Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
@@ -361,7 +359,6 @@ public class TocService {
 					// Cleanup.
 					Files.delete(tempFile);
 
-					//Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
 					log.info("TOC file updated.");
 					return true;
 				}

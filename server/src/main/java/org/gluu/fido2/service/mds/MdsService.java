@@ -16,7 +16,6 @@ package org.gluu.fido2.service.mds;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,7 +41,6 @@ import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.client.ResteasyClientFactory;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.service.cdi.event.ApplicationInitialized;
-import org.gluu.util.StringHelper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.slf4j.Logger;
 
@@ -84,7 +82,11 @@ public class MdsService {
             throw new Fido2RuntimeException("Fido2 configuration not exists");
         }
 
-		
+		/*
+		 * String mdsAccessToken = fido2Configuration.getMdsAccessToken(); if
+		 * (StringHelper.isEmpty(mdsAccessToken)) { throw new
+		 * Fido2RuntimeException("Fido2 MDS access token should be set"); }
+		 */
 
         String aaguid = deconvert(aaguidBuffer);
         
@@ -99,44 +101,28 @@ public class MdsService {
             throw new Fido2RuntimeException("Authenticator not in TOC aaguid " + aaguid);
         }
 
-		
+		/*
+		 * String tocEntryUrl = tocEntry.get("url").asText(); URI metadataUrl; try {
+		 * metadataUrl = new URI(String.format("%s/?token=%s", tocEntryUrl,
+		 * mdsAccessToken));
+		 * log.debug("Authenticator AAGUI {} url metadataUrl {} downloaded", aaguid,
+		 * metadataUrl); } catch (URISyntaxException e) { throw new
+		 * Fido2RuntimeException("Invalid URI in TOC aaguid " + aaguid); }
+		 */
 
         verifyTocEntryStatus(aaguid, tocEntry);
-       
+        //String metadataHash = commonVerifiers.verifyThatFieldString(tocEntry, "hash");
+
+        //log.debug("Reaching MDS at {}", tocEntryUrl);
+
+        //mdsEntry = downloadMdsFromServer(aaguid, metadataUrl, metadataHash);
+
+        //mdsEntries.put(aaguid, mdsEntry);
         
         return mdsEntry;
     }
 
-	private JsonNode downloadMdsFromServer(String aaguid, URI metadataUrl, String metadataHash) {
-		ResteasyClient resteasyClient = resteasyClientFactory.buildResteasyClient();
-        Response response = resteasyClient.target(metadataUrl).request().header("Content-Type", MediaType.APPLICATION_JSON).get();
-        String body = response.readEntity(String.class);
-
-        StatusType status = response.getStatusInfo();
-        log.debug("Response from resource server {}", status);
-        if (status.getFamily() == Status.Family.SUCCESSFUL) {
-            byte[] bodyBuffer;
-            try {
-                bodyBuffer = body.getBytes("UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                throw new Fido2RuntimeException("Unable to verify metadata hash for aaguid " + aaguid);
-            }
-
-            byte[] digest = tocService.getDigester().digest(bodyBuffer);
-            if (!Arrays.equals(digest, base64Service.urlDecode(metadataHash))) {
-                throw new Fido2RuntimeException("Unable to verify metadata hash for aaguid " + aaguid);
-            }
-
-            try {
-            	return dataMapperService.readTree(base64Service.urlDecode(body));
-            } catch (IOException e) {
-                log.error("Can't parse payload from the server");
-                throw new Fido2RuntimeException("Unable to parse payload from server for aaguid " + aaguid);
-            }
-        } else {
-            throw new Fido2RuntimeException("Unable to retrieve metadata for aaguid " + aaguid + " status " + status);
-        }
-	}
+	
 
     private void verifyTocEntryStatus(String aaguid, JsonNode tocEntry) {
         JsonNode statusReports = tocEntry.get("statusReports");

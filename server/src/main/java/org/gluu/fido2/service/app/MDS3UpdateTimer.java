@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 @Named
 public class MDS3UpdateTimer {
 
-	private static final int DEFAULT_INTERVAL = 60;// *60*24; // every 24 hours
+	private static final int DEFAULT_INTERVAL = 60 *60*24; // every 24 hours
 
 	@Inject
 	private Logger log;
@@ -55,7 +55,7 @@ public class MDS3UpdateTimer {
 	@Asynchronous
 	public void process(@Observes @Scheduled MDS3UpdateEvent mds3UpdateEvent) {
 		LocalDate nextUpdate = tocService.getNextUpdateDate();
-		log.debug("MDS3 nextUpdate: " + nextUpdate.toString());
+		log.debug("MDS3 nextUpdate: {}" , nextUpdate.toString());
 		if (nextUpdate.equals(LocalDate.now()) || nextUpdate.isBefore(LocalDate.now())) {
 			log.info("Downloading the latest TOC from https://mds.fidoalliance.org/");
 			try {
@@ -63,10 +63,11 @@ public class MDS3UpdateTimer {
 
 			} catch (MalformedURLException e) {
 				log.error("Error while parsing the FIDO alliance URL :", e);
+				return;
 			}
 			tocService.refresh();
 		} else {
-			log.info(LocalDate.now().until(nextUpdate, ChronoUnit.DAYS) + " more days for MDS3 Update");
+			log.info( "{} more days for MDS3 Update",LocalDate.now().until(nextUpdate, ChronoUnit.DAYS) );
 		}
 	}
 
