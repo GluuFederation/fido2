@@ -287,7 +287,7 @@ public class TocService {
 
     private MessageDigest resolveDigester(JWSAlgorithm algorithm) {
     	// fix: algorithm RS256 added for https://github.com/GluuFederation/fido2/issues/16
-        if (JWSAlgorithm.ES256.equals(algorithm) || JWSAlgorithm.RS256.equals(algorithm) ) {
+        if (JWSAlgorithm.ES256.equals(algorithm) || JWSAlgorithm.RS256.equals(algorithm) || (JWSAlgorithm.PS256.equals(algorithm))) {
             return DigestUtils.getSha256Digest();
         }
        else {
