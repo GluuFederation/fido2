@@ -46,7 +46,7 @@ public class MDS3UpdateTimer {
 	public void initTimer() {
 		log.info("Initializing MDS3 Update Timer");
 
-		timerEvent.fire(new TimerEvent(new TimerSchedule(DEFAULT_INTERVAL, DEFAULT_INTERVAL), new MDS3UpdateEvent(),
+		timerEvent.fire(new TimerEvent(new TimerSchedule(DEFAULT_INTERVAL, DEFAULT_INTERVAL), new MDS3UpdateEvent() {},
 				Scheduled.Literal.INSTANCE));
 
 		log.info("Initialized MDS3 Update Timer");

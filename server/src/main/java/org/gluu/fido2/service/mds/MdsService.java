@@ -13,9 +13,6 @@
 
 package org.gluu.fido2.service.mds;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,10 +23,6 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.StatusType;
 
 import org.apache.commons.codec.binary.Hex;
 import org.gluu.fido2.exception.Fido2RuntimeException;
@@ -41,7 +34,6 @@ import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.client.ResteasyClientFactory;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.service.cdi.event.ApplicationInitialized;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -82,11 +74,7 @@ public class MdsService {
             throw new Fido2RuntimeException("Fido2 configuration not exists");
         }
 
-		/*
-		 * String mdsAccessToken = fido2Configuration.getMdsAccessToken(); if
-		 * (StringHelper.isEmpty(mdsAccessToken)) { throw new
-		 * Fido2RuntimeException("Fido2 MDS access token should be set"); }
-		 */
+		
 
         String aaguid = deconvert(aaguidBuffer);
         
@@ -101,23 +89,7 @@ public class MdsService {
             throw new Fido2RuntimeException("Authenticator not in TOC aaguid " + aaguid);
         }
 
-		/*
-		 * String tocEntryUrl = tocEntry.get("url").asText(); URI metadataUrl; try {
-		 * metadataUrl = new URI(String.format("%s/?token=%s", tocEntryUrl,
-		 * mdsAccessToken));
-		 * log.debug("Authenticator AAGUI {} url metadataUrl {} downloaded", aaguid,
-		 * metadataUrl); } catch (URISyntaxException e) { throw new
-		 * Fido2RuntimeException("Invalid URI in TOC aaguid " + aaguid); }
-		 */
-
         verifyTocEntryStatus(aaguid, tocEntry);
-        //String metadataHash = commonVerifiers.verifyThatFieldString(tocEntry, "hash");
-
-        //log.debug("Reaching MDS at {}", tocEntryUrl);
-
-        //mdsEntry = downloadMdsFromServer(aaguid, metadataUrl, metadataHash);
-
-        //mdsEntries.put(aaguid, mdsEntry);
         
         return mdsEntry;
     }

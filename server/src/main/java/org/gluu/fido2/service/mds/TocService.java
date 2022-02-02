@@ -214,19 +214,24 @@ public class TocService {
             Map<String, JsonNode> tocEntries = new HashMap<>();
             while (iter.hasNext()) {
                 JsonNode metadataEntry = iter.next();
-                if (metadataEntry.hasNonNull("aaguid")) {
-                    String aaguid = metadataEntry.get("aaguid").asText();
-                    
-                    JsonNode metaDataStatement = null;
-            		try {
-            			metaDataStatement = dataMapperService.readTree(metadataEntry.get("metadataStatement").toPrettyString());
-            		} catch (IOException e) {
-            			log.error("Error parsing the metadata statement",e);
-            		}
-            		JsonNode statusReports = dataMapperService.readTree(metaDataStatement.get("statusReports").toPrettyString());
-                    log.info("Added TOC entry {} from {} with status {} ", aaguid, path, statusReports != null ? statusReports.findValue("status"):"No Status reports");
-                    tocEntries.put(aaguid, metaDataStatement);
-                }
+				if (metadataEntry.hasNonNull("aaguid")) {
+					String aaguid = metadataEntry.get("aaguid").asText();
+
+					try {
+						JsonNode metaDataStatement = dataMapperService
+								.readTree(metadataEntry.get("metadataStatement").toPrettyString());
+						if(metaDataStatement != null)
+						{
+							
+							log.info("Added TOC entry {} ", aaguid);
+							tocEntries.put(aaguid, metaDataStatement);
+						}
+						
+					} catch (IOException e) {
+						log.error("Error parsing the metadata statement", e);
+					}
+
+				}
 				else if (metadataEntry.hasNonNull("aaid")) {
 					String aaid = metadataEntry.get("aaid").asText();
 					log.info("TODO: handle aaid addition to tocEntries {}", aaid);
@@ -349,7 +354,7 @@ public class TocService {
 			while (iter.hasNext()) {
 				Path filePath = iter.next();
 				try (InputStream in = metadataUrl.openStream()) {
-					Path tempFile = Files.createTempFile(null,null);
+					Path tempFile = Files.createTempFile("tmpfile",".tmp");
 
 					Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
 
