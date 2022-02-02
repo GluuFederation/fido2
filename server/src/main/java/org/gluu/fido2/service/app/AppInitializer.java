@@ -93,6 +93,9 @@ public class AppInitializer {
 
 	@Inject
 	private CleanerTimer cleanerTimer;
+	
+	@Inject
+	private MDS3UpdateTimer mds3UpdateTimer;
 
 	@Inject
 	private QuartzSchedulerManager quartzSchedulerManager;
@@ -130,6 +133,7 @@ public class AppInitializer {
 		configurationFactory.initTimer();
 		loggerService.initTimer();
 		cleanerTimer.initTimer();
+		mds3UpdateTimer.initTimer();
 		customScriptManager.initTimer(supportedCustomScriptTypes);
 
 		// Notify plugins about finish application initialization
