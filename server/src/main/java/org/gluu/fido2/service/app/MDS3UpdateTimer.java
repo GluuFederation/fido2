@@ -55,7 +55,6 @@ public class MDS3UpdateTimer {
 	@Asynchronous
 	public void process(@Observes @Scheduled MDS3UpdateEvent mds3UpdateEvent) {
 		LocalDate nextUpdate = tocService.getNextUpdateDate();
-		log.debug("MDS3 nextUpdate: {}" , nextUpdate.toString());
 		if (nextUpdate.equals(LocalDate.now()) || nextUpdate.isBefore(LocalDate.now())) {
 			log.info("Downloading the latest TOC from https://mds.fidoalliance.org/");
 			try {

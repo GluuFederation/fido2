@@ -150,112 +150,114 @@ public class TocService {
         }
     }
 
-    private Pair<LocalDate, Map<String, JsonNode>> parseTOC(String mdsTocRootCertsFolder, Path path) throws IOException, ParseException {
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
-            JWSObject jwsObject = JWSObject.parse(reader.readLine());
+	private Pair<LocalDate, Map<String, JsonNode>> parseTOC(String mdsTocRootCertsFolder, Path path)
+			throws IOException, ParseException {
+		try (BufferedReader reader = Files.newBufferedReader(path)) {
+			JWSObject jwsObject = JWSObject.parse(reader.readLine());
 
-            List<String> certificateChain = jwsObject.getHeader().getX509CertChain().stream().map(c -> base64Service.encodeToString(c.decode()))
-                    .collect(Collectors.toList());
-            JWSAlgorithm algorithm = jwsObject.getHeader().getAlgorithm();
+			List<String> certificateChain = jwsObject.getHeader().getX509CertChain().stream()
+					.map(c -> base64Service.encodeToString(c.decode())).collect(Collectors.toList());
+			JWSAlgorithm algorithm = jwsObject.getHeader().getAlgorithm();
 
-	         // If the x5u attribute is present in the JWT Header then
-			if (jwsObject.getHeader().getX509CertURL() != null) {
-				// 1. The FIDO Server MUST verify that the URL specified by the x5u attribute
-				// has the same web-origin as the URL used to download the metadata BLOB from.
-				// The FIDO Server SHOULD ignore the file if the web-origin differs (in order to
-				// prevent loading objects from arbitrary sites).
-				// 2. The FIDO Server MUST download the certificate (chain) from the URL
-				// specified by the x5u attribute [JWS]. The certificate chain MUST be verified
-				// to properly chain to the metadata BLOB signing trust anchor according to
-				// [RFC5280]. All certificates in the chain MUST be checked for revocation
-				// according to [RFC5280].
-				// 3. The FIDO Server SHOULD ignore the file if the chain cannot be verified or
-				// if one of the chain certificates is revoked.
-			}
+			// If the x5u attribute is present in the JWT Header then
+			// if (jwsObject.getHeader().getX509CertURL() != null) {
+			// 1. The FIDO Server MUST verify that the URL specified by the x5u attribute
+			// has the same web-origin as the URL used to download the metadata BLOB from.
+			// The FIDO Server SHOULD ignore the file if the web-origin differs (in order to
+			// prevent loading objects from arbitrary sites).
+			// 2. The FIDO Server MUST download the certificate (chain) from the URL
+			// specified by the x5u attribute [JWS]. The certificate chain MUST be verified
+			// to properly chain to the metadata BLOB signing trust anchor according to
+			// [RFC5280]. All certificates in the chain MUST be checked for revocation
+			// according to [RFC5280].
+			// 3. The FIDO Server SHOULD ignore the file if the chain cannot be verified or
+			// if one of the chain certificates is revoked.
+
 			// the chain should be retrieved from the x5c attribute.
-			else if (certificateChain.isEmpty()) {
-				// The FIDO Server SHOULD ignore the file if the chain cannot be verified or if
-				// one of the chain certificates is revoked.
-				log.info("x5c");
-			} else {
-				log.info ("Metadata BLOB signing trust anchor is considered the BLOB signing certificate chain");
-				// Metadata BLOB signing trust anchor is considered the BLOB signing certificate
-				// chain.
-				// Verify the signature of the Metadata BLOB object using the BLOB signing
-				// certificate chain (as determined by the steps above). The FIDO Server SHOULD
-				// ignore the file if the signature is invalid. It SHOULD also ignore the file
-				// if its number (no) is less or equal to the number of the last Metadata BLOB
-				// object cached locally.
+			// else if (certificateChain.isEmpty()) {
+			// The FIDO Server SHOULD ignore the file if the chain cannot be verified or if
+			// one of the chain certificates is revoked.
+			// } else {
+			log.info("Metadata BLOB signing trust anchor is considered the BLOB signing certificate chain");
+			// Metadata BLOB signing trust anchor is considered the BLOB signing certificate
+			// chain.
+			// Verify the signature of the Metadata BLOB object using the BLOB signing
+			// certificate chain (as determined by the steps above). The FIDO Server SHOULD
+			// ignore the file if the signature is invalid. It SHOULD also ignore the file
+			// if its number (no) is less or equal to the number of the last Metadata BLOB
+			// object cached locally.
+			// }
+
+			try {
+				JWSVerifier verifier = resolveVerifier(algorithm, mdsTocRootCertsFolder, certificateChain);
+				if (!jwsObject.verify(verifier)) {
+					log.warn("Unable to verify JWS object using algorithm {} for file {}", algorithm, path);
+					return new Pair<LocalDate, Map<String, JsonNode>>(null, Collections.emptyMap());
+				}
+			} catch (Exception e) {
+				log.warn("Unable to verify JWS object using algorithm {} for file {} {}", algorithm, path, e);
+				return new Pair<LocalDate, Map<String, JsonNode>>(null, Collections.emptyMap());
 			}
-         			
-            try {
-                JWSVerifier verifier = resolveVerifier(algorithm, mdsTocRootCertsFolder, certificateChain);
-                if (!jwsObject.verify(verifier)) {
-                    log.warn("Unable to verify JWS object using algorithm {} for file {}", algorithm, path);
-                    return new Pair<LocalDate, Map<String,JsonNode>>(null, Collections.emptyMap());
-                }
-            } catch (Exception e) {
-                log.warn("Unable to verify JWS object using algorithm {} for file {} {}", algorithm, path, e);
-                return new Pair<LocalDate, Map<String,JsonNode>>(null, Collections.emptyMap());
-            }
 
-            String jwtPayload = jwsObject.getPayload().toString();
-            JsonNode toc = dataMapperService.readTree(jwtPayload);
-            log.debug("Legal header {}", toc.get("legalHeader"));
-            nextUpdate = LocalDate.parse(toc.get("nextUpdate").asText(), ISO_DATE);
-            
-            ArrayNode entries = (ArrayNode) toc.get("entries");
-            int serialNo = toc.get("no").asInt();
-            // The serial number of this UAF Metadata BLOB Payload. Serial numbers MUST be consecutive and strictly monotonic, i.e. the successor BLOB will have a no value exactly incremented by one.
-            
-            log.debug("Property 'no' value: {}. serialNo: {}", serialNo, entries.size());
+			String jwtPayload = jwsObject.getPayload().toString();
+			JsonNode toc = dataMapperService.readTree(jwtPayload);
+			log.debug("Legal header {}", toc.get("legalHeader"));
+			nextUpdate = LocalDate.parse(toc.get("nextUpdate").asText(), ISO_DATE);
 
-            Iterator<JsonNode> iter = entries.elements();
-            Map<String, JsonNode> tocEntries = new HashMap<>();
-            while (iter.hasNext()) {
-                JsonNode metadataEntry = iter.next();
+			ArrayNode entries = (ArrayNode) toc.get("entries");
+			int serialNo = toc.get("no").asInt();
+			// The serial number of this UAF Metadata BLOB Payload. Serial numbers MUST be
+			// consecutive and strictly monotonic, i.e. the successor BLOB will have a no
+			// value exactly incremented by one.
+
+			log.debug("Property 'no' value: {}. serialNo: {}", serialNo, entries.size());
+
+			Iterator<JsonNode> iter = entries.elements();
+			Map<String, JsonNode> tocEntries = new HashMap<>();
+			while (iter.hasNext()) {
+				JsonNode metadataEntry = iter.next();
 				if (metadataEntry.hasNonNull("aaguid")) {
 					String aaguid = metadataEntry.get("aaguid").asText();
 
 					try {
 						JsonNode metaDataStatement = dataMapperService
 								.readTree(metadataEntry.get("metadataStatement").toPrettyString());
-						if(metaDataStatement != null)
-						{
-							
+						if (metaDataStatement != null) {
+
 							log.info("Added TOC entry {} ", aaguid);
 							tocEntries.put(aaguid, metaDataStatement);
 						}
-						
+
 					} catch (IOException e) {
 						log.error("Error parsing the metadata statement", e);
 					}
 
-				}
-				else if (metadataEntry.hasNonNull("aaid")) {
+				} else if (metadataEntry.hasNonNull("aaid")) {
 					String aaid = metadataEntry.get("aaid").asText();
 					log.info("TODO: handle aaid addition to tocEntries {}", aaid);
 				} else if (metadataEntry.hasNonNull("attestationCertificateKeyIdentifiers")) {
-					// FIDO U2F authenticators do not support AAID nor AAGUID, but they use attestation certificates dedicated to a single authenticator model.
-					String attestationCertificateKeyIdentifiers = metadataEntry.get("attestationCertificateKeyIdentifiers")
-							.asText();
+					// FIDO U2F authenticators do not support AAID nor AAGUID, but they use
+					// attestation certificates dedicated to a single authenticator model.
+					String attestationCertificateKeyIdentifiers = metadataEntry
+							.get("attestationCertificateKeyIdentifiers").asText();
 					log.info("TODO: handle attestationCertificateKeyIdentifiers addition to tocEntries {}",
 							attestationCertificateKeyIdentifiers);
 				} else {
-					log.info("Null - aaguid , aaid, attestationCertificateKeyIdentifiers - Added TOC entry  from {} with status {}",  path,
-							metadataEntry.get("statusReports").findValue("status"));
+					log.info(
+							"Null - aaguid , aaid, attestationCertificateKeyIdentifiers - Added TOC entry  from {} with status {}",
+							path, metadataEntry.get("statusReports").findValue("status"));
 				}
-            }
-            
-            String nextUpdateText = toc.get("nextUpdate").asText();
+			}
 
-            LocalDate nextUpdateDate = LocalDate.parse(nextUpdateText);
+			String nextUpdateText = toc.get("nextUpdate").asText();
 
-            this.digester = resolveDigester(algorithm);
-            
-            return new Pair<LocalDate, Map<String,JsonNode>>(nextUpdateDate, tocEntries);
-        }
-    }
+			LocalDate nextUpdateDate = LocalDate.parse(nextUpdateText);
+
+			this.digester = resolveDigester(algorithm);
+
+			return new Pair<LocalDate, Map<String, JsonNode>>(nextUpdateDate, tocEntries);
+		}
+	}
 
     private JWSVerifier resolveVerifier(JWSAlgorithm algorithm, String mdsTocRootCertsFolder, List<String> certificateChain) {
         List<X509Certificate> x509CertificateChain = certificateService.getCertificates(certificateChain);
@@ -263,7 +265,7 @@ public class TocService {
 
         X509Certificate verifiedCert = certificateVerifier.verifyAttestationCertificates(x509CertificateChain, x509TrustedCertificates);
         //possible set of algos are : ES256, RS256, PS256, ED256
-        // TODO: no support for ED256 in JOSE library
+        // no support for ED256 in JOSE library
         
         if (JWSAlgorithm.ES256.equals(algorithm)) {
         	log.debug("resolveVerifier : ES256");
@@ -354,15 +356,8 @@ public class TocService {
 			while (iter.hasNext()) {
 				Path filePath = iter.next();
 				try (InputStream in = metadataUrl.openStream()) {
-					Path tempFile = Files.createTempFile("tmpfile",".tmp");
 
-					Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
-
-					// Actual copy.
-					Files.copy(tempFile, filePath, StandardCopyOption.REPLACE_EXISTING);
-
-					// Cleanup.
-					Files.delete(tempFile);
+					Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
 
 					log.info("TOC file updated.");
 					return true;
