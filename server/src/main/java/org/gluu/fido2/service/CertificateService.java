@@ -30,8 +30,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.slf4j.Logger;
 
 /**

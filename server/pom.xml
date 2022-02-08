@@ -134,6 +134,16 @@
             <artifactId>exception-extension-cdi</artifactId>
         </dependency>
 
+		<!-- Security -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpkix-jdk15on</artifactId>
+		</dependency>
+
         <!-- RestEasy -->
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
