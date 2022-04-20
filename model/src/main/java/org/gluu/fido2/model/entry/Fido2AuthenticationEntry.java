@@ -32,9 +32,6 @@ public class Fido2AuthenticationEntry extends Fido2Entry implements Serializable
     @AttributeName(name = "oxStatus")
     private Fido2AuthenticationStatus authenticationStatus;
 
-    @AttributeName(name = "oxCodeChallengeHash")
-    private String challangeHash;
-
     public Fido2AuthenticationEntry() {
     }
 
@@ -57,14 +54,6 @@ public class Fido2AuthenticationEntry extends Fido2Entry implements Serializable
 
     public void setAuthenticationStatus(Fido2AuthenticationStatus authenticationStatus) {
         this.authenticationStatus = authenticationStatus;
-    }
-
-    public String getChallangeHash() {
-        return challangeHash;
-    }
-
-    public void setChallangeHash(String challangeHash) {
-        this.challangeHash = challangeHash;
     }
 
     @Override
