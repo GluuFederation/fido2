@@ -218,15 +218,15 @@ public class TocService {
 				JsonNode metadataEntry = iter.next();
 				if (metadataEntry.hasNonNull("aaguid")) {
 					String aaguid = metadataEntry.get("aaguid").asText();
-
 					try {
 						JsonNode metaDataStatement = dataMapperService
 								.readTree(metadataEntry.get("metadataStatement").toPrettyString());
 						if (metaDataStatement != null) {
 
 							log.info("Added TOC entry {} ", aaguid);
-							tocEntries.put(aaguid, metaDataStatement);
+							tocEntries.put(aaguid, metadataEntry);
 						}
+						
 
 					} catch (IOException e) {
 						log.error("Error parsing the metadata statement", e);
@@ -368,5 +368,5 @@ public class TocService {
 		}
 		return false;
 	}
-
+	
 }
