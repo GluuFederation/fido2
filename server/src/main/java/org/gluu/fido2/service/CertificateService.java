@@ -82,6 +82,7 @@ public class CertificateService {
                 c.checkValidity();
                 return true;
             } catch (CertificateException e) {
+            	log.error("Exception - ",e);
                 log.warn("Certificate not valid {}", c.getIssuerDN().getName());
                 throw new Fido2RuntimeException("Certificate not valid", e);
             }
