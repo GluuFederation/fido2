@@ -91,7 +91,7 @@ public class MdsService {
 
         verifyTocEntryStatus(aaguid, tocEntry);
         
-        return mdsEntry;
+        return tocEntry;
     }
 
 	
@@ -104,7 +104,7 @@ public class MdsService {
             JsonNode statusReport = iter.next();
             AuthenticatorCertificationStatus authenticatorStatus = AuthenticatorCertificationStatus.valueOf(statusReport.get("status").asText());
             String authenticatorEffectiveDate = statusReport.get("effectiveDate").asText();
-            log.debug("Authenticator AAGUI {} status {} effective date {}", aaguid, authenticatorStatus, authenticatorEffectiveDate);
+            log.debug("Authenticator AAGUID {} status {} effective date {}", aaguid, authenticatorStatus, authenticatorEffectiveDate);
             verifyStatusAcceptable(aaguid, authenticatorStatus);
         }
     }
