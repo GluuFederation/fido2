@@ -19,7 +19,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		
 
-		<gluu.parent.version>4.4.1.Final</gluu.parent.version>
+		<gluu.parent.version>4.4.2-SNAPSHOT</gluu.parent.version>
 		<gluu.version>4.4.2-SNAPSHOT</gluu.version>
 
 		<sonar.projectKey>GluuFederation_fido2</sonar.projectKey>
