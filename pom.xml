@@ -70,13 +70,13 @@
 			<dependency>
 				<groupId>org.gluu</groupId>
 				<artifactId>oxauth-common</artifactId>
-				<version>${gluu.version}</version>
+				<version>${gluu.parent.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.gluu</groupId>
 				<artifactId>oxauth-model</artifactId>
-				<version>${gluu.version}</version>
+				<version>${gluu.parent.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.gluu</groupId>
