@@ -76,17 +76,24 @@ public class AttestationCertificateService {
 	}
 
 	public List<X509Certificate> getAttestationRootCertificates(JsonNode metadataNode, List<X509Certificate> attestationCertificates) {
-		JsonNode metaDataStatement = null;
-		try {
-			 metaDataStatement = dataMapperService
-					.readTree(metadataNode.get("metadataStatement").toPrettyString());
-		} catch (IOException e) {
-			log.error("Error parsing the metadata statement", e);
-		}
 		
-		if (metaDataStatement == null || !metaDataStatement.has("attestationRootCertificates")) {
-            List<X509Certificate> selectedRootCertificate = certificateService.selectRootCertificates(rootCertificatesMap, attestationCertificates);
-            
+		
+		JsonNode metaDataStatement = null;
+		
+		// incase of u2f-fido2 attestation
+		if (metadataNode != null) {
+			try {
+				metaDataStatement = dataMapperService.readTree(metadataNode.get("metadataStatement").toPrettyString());
+			} catch (IOException e) {
+				log.error("Error parsing the metadata statement", e);
+			}
+		}
+
+		if (metadataNode == null || metaDataStatement == null
+				|| !metaDataStatement.has("attestationRootCertificates")) {
+			List<X509Certificate> selectedRootCertificate = certificateService
+					.selectRootCertificates(rootCertificatesMap, attestationCertificates);
+
 			return selectedRootCertificate;
 		}
 
@@ -133,7 +140,7 @@ public class AttestationCertificateService {
 		KeyStore keyStore = getCertificationKeyStore(aaguid, trustedCertificates);
 
 		TrustManagerFactory trustManagerFactory = null;
-		try {
+		try { 
 			trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 			trustManagerFactory.init(keyStore);
 			TrustManager[] tms = trustManagerFactory.getTrustManagers();
