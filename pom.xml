@@ -32,28 +32,19 @@
 
 	<repositories>
 		<repository>
-			<id>repository.jboss.org</id>
-			<name>JBoss Repository</name>
-			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
-			<id>gluu</id>
-			<name>Gluu repository</name>
-			<url>https://maven.gluu.org/maven</url>
-		</repository>
-		<repository>
-			<id>bouncycastle</id>
-			<name>Bouncy Castle</name>
-			<url>https://repo2.maven.org/maven2/org/bouncycastle</url>
-		</repository>
-		<repository>
 			<id>mavencentral</id>
 			<name>maven central</name>
 			<url>https://repo1.maven.org/maven2</url>
+		</repository>
+        	<repository>
+			<id>bouncycastle</id>
+			<name>Bouncy Castle</name>
+			<url>https://repo2.maven.org/maven2/org/bouncycastle</url>
+	        </repository>
+        	<repository>
+			<id>gluu</id>
+			<name>Gluu project repository</name>
+			<url>https://maven.gluu.org/maven</url>
 		</repository>
 	</repositories>
 
