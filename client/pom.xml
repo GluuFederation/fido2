@@ -101,6 +101,13 @@
             <version>${gluu.version}</version>
         </dependency>
 
+        <!-- Resteasy -->
+        <dependency>
+            <groupId>org.jboss.spec.javax.ws.rs</groupId>
+            <artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
+            <version>2.0.2.Final</version>
+        </dependency>
+
         <!-- commons -->
         <dependency>
             <groupId>commons-beanutils</groupId>
