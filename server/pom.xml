@@ -48,7 +48,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>3.3.2</version>
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 					<archive>
@@ -74,6 +73,21 @@
 							<filtering>false</filtering>
 						</resource>
 					</webResources>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+						<manifestEntries>
+							<Implementation-Build>${buildNumber}</Implementation-Build>
+						</manifestEntries>
+					</archive>
 				</configuration>
 			</plugin>
 
@@ -112,6 +126,10 @@
             		<groupId>org.apache.jackrabbit</groupId>
             		<artifactId>jackrabbit-core</artifactId>
             	</exclusion>
+            	<exclusion>
+            		<groupId>org.bouncycastle</groupId>
+            		<artifactId>bcprov-jdk15on</artifactId>
+            	</exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -126,11 +144,11 @@
 		<!-- Security -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
+			<artifactId>bcprov-jdk18on</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpkix-jdk15on</artifactId>
+			<artifactId>bcpkix-jdk18on</artifactId>
 		</dependency>
 
         <!-- RestEasy -->
