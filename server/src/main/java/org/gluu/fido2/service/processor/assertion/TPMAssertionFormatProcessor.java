@@ -18,11 +18,11 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.gluu.fido2.ctap.AttestationFormat;
 import org.gluu.fido2.ctap.AuthenticatorAttachment;
+import org.gluu.fido2.entry.Fido2AuthenticationData;
+import org.gluu.fido2.entry.Fido2RegistrationData;
 import org.gluu.fido2.exception.Fido2CompromisedDevice;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.AuthData;
-import org.gluu.fido2.model.entry.Fido2AuthenticationData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
 import org.gluu.fido2.service.AuthenticatorDataParser;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CoseService;
@@ -37,6 +37,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.security.PublicKey;
 
+/**
+ * Class which processes assertions of "tpm" fmt (attestation type)
+ */
 @ApplicationScoped
 public class TPMAssertionFormatProcessor implements AssertionFormatProcessor {
 
@@ -64,6 +67,12 @@ public class TPMAssertionFormatProcessor implements AssertionFormatProcessor {
     @Inject
     private Base64Service base64Service;
 
+    @Inject
+    private DigestUtilService digestUtilService;
+
+    @Inject
+    private HexUtilService hexUtilService;
+
     @Override
     public AttestationFormat getAttestationFormat() {
         return AttestationFormat.tpm;
@@ -78,7 +87,7 @@ public class TPMAssertionFormatProcessor implements AssertionFormatProcessor {
         log.debug("User verification option {}", authenticationEntity.getUserVerificationOption());
         userVerificationVerifier.verifyUserVerificationOption(authenticationEntity.getUserVerificationOption(), authData);
 
-        byte[] clientDataHash = DigestUtils.getSha256Digest().digest(base64Service.urlDecode(clientDataJson));
+        byte[] clientDataHash = digestUtilService.sha256Digest(base64Service.urlDecode(clientDataJson));
 
         try {
             int counter = authenticatorDataParser.parseCounter(authData.getCounters());
@@ -89,7 +98,7 @@ public class TPMAssertionFormatProcessor implements AssertionFormatProcessor {
             PublicKey publicKey = coseService.createUncompressedPointFromCOSEPublicKey(uncompressedECPointNode);
 
             log.debug("Uncompressed ECPoint node {}", uncompressedECPointNode);
-            log.debug("EC Public key hex {}", Hex.encodeHexString(publicKey.getEncoded()));
+            log.debug("EC Public key hex {}", hexUtilService.encodeHexString(publicKey.getEncoded()));
             // apple algorithm = -7
             // windows hello algorithm is -257
             int algorithm = registration.getAttenstationRequest().contains(AuthenticatorAttachment.PLATFORM.getAttachment()) ? -257 : registration.getSignatureAlgorithm();

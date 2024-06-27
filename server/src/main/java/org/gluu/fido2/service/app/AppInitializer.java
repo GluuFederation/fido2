@@ -49,10 +49,13 @@ import org.slf4j.Logger;
 import com.google.common.collect.Lists;
 
 /**
+ * 
+ * FIDO2 server initializer
  * @author Yuriy MOvchan
  * @version May 12, 2020
  */
 @ApplicationScoped
+@Named
 public class AppInitializer {
 
 	@Inject
@@ -93,9 +96,6 @@ public class AppInitializer {
 
 	@Inject
 	private CleanerTimer cleanerTimer;
-	
-	@Inject
-	private MDS3UpdateTimer mds3UpdateTimer;
 
 	@Inject
 	private QuartzSchedulerManager quartzSchedulerManager;
@@ -103,9 +103,16 @@ public class AppInitializer {
 	@Inject
 	private LoggerService loggerService;
 
+	@Inject
+	private MDS3UpdateTimer mds3UpdateTimer;
+
 	@PostConstruct
 	public void createApplicationComponents() {
-		SecurityProviderUtility.installBCProvider();
+		try {
+			SecurityProviderUtility.installBCProvider();
+		} catch (ClassCastException ex) {
+			log.error("Failed to install BC provider properly");
+		}
 	}
 
 	public void applicationInitialized(@Observes @Initialized(ApplicationScoped.class) Object init) {
@@ -114,16 +121,15 @@ public class AppInitializer {
 		configurationFactory.create();
 
 		PersistenceEntryManager localPersistenceEntryManager = persistenceEntryManagerInstance.get();
-		log.trace("Attempting to use {}: {}", ApplicationFactory.PERSISTENCE_ENTRY_MANAGER_NAME, localPersistenceEntryManager.getOperationService());
+		log.trace("Attempting to use {}: {}", ApplicationFactory.PERSISTENCE_ENTRY_MANAGER_NAME,
+				localPersistenceEntryManager.getOperationService());
 
 		// Initialize python interpreter
-		pythonService.initPythonInterpreter(configurationFactory.getBaseConfiguration().getString("pythonModulesDir", null));
+		pythonService
+				.initPythonInterpreter(configurationFactory.getBaseConfiguration().getString("pythonModulesDir", null));
 
 		// Initialize script manager
-		List<CustomScriptType> supportedCustomScriptTypes = Lists.newArrayList(CustomScriptType.values());
-
-		// There is no Fido2 scripts yet
-		supportedCustomScriptTypes.clear();
+		List<CustomScriptType> supportedCustomScriptTypes = Lists.newArrayList(CustomScriptType.FIDO2_EXTENSION);
 
 		// Start timer
 		initSchedulerService();
@@ -131,7 +137,7 @@ public class AppInitializer {
 		// Schedule timer tasks
 		metricService.initTimer();
 		configurationFactory.initTimer();
-		loggerService.initTimer();
+		loggerService.initTimer(true);
 		cleanerTimer.initTimer();
 		mds3UpdateTimer.initTimer();
 		customScriptManager.initTimer(supportedCustomScriptTypes);
@@ -272,7 +278,7 @@ public class AppInitializer {
 
 	public void destroy(@Observes @BeforeDestroyed(ApplicationScoped.class) ServletContext init) {
 		log.info("Stopping services and closing DB connections at server shutdown...");
-		log.debug("Checking who intiated destory", new Throwable());
+		log.debug("Checking who intiated destroy", new Throwable());
 
 		metricService.close();
 

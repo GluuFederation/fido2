@@ -20,6 +20,32 @@
 	<build>
 		<finalName>${project.artifactId}</finalName>
 
+		<resources>
+			<resource>
+				<directory>${project.basedir}/../server/src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.xml</include>
+					<include>**/*.properties</include>
+					<include>META-INF/services/*.*</include>
+				</includes>
+			</resource>
+		</resources>
+
+		<testResources>
+			<testResource>
+				<directory>${project.basedir}/../server/src/main/webapp</directory>
+				<includes>
+					<include>WEB-INF/**</include>
+				</includes>
+				<filtering>true</filtering>
+			</testResource>
+			<testResource>
+				<directory>src/test/resources</directory>
+				<filtering>true</filtering>
+			</testResource>
+		</testResources>
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -52,6 +78,7 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
+					<outdatedCheckPath>tmp</outdatedCheckPath>
 					<archive>
 						<manifest>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
@@ -63,7 +90,8 @@
 					<packagingExcludes>
 						WEB-INF/lib/bcpkix-jdk18on-*.jar,
 						WEB-INF/lib/bcprov-jdk18on-*.jar,
-						WEB-INF/lib/bcutil-jdk18on-*.jar
+						WEB-INF/lib/bcutil-jdk18on-*.jar,
+						WEB-INF/lib/bcmail-jdk18on-*.jar
 					</packagingExcludes>
 				</configuration>
 			</plugin>
@@ -104,6 +132,14 @@
 					<failOnNoGitDirectory>false</failOnNoGitDirectory>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skipTests>true</skipTests>
+				</configuration>
+			</plugin>
 		</plugins>
 
 	</build>
@@ -117,6 +153,10 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-fips</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcmail-fips</artifactId>
 		</dependency>
 	</dependencies>
 

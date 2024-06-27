@@ -22,16 +22,22 @@ import org.gluu.fido2.exception.Fido2RpRuntimeException;
 import org.gluu.fido2.model.conf.AppConfiguration;
 import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.operation.AttestationService;
+import org.gluu.fido2.service.verifier.CommonVerifiers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
+ * serves request for /attestation endpoint exposed by FIDO2 sever
+ *
  * @author Yuriy Movchan
  * @version May 08, 2020
  */
 @ApplicationScoped
-@Path("/fido2/attestation")
+@Path("/attestation")
 public class AttestationController {
+
+    @Inject
+    private Logger log;
 
     @Inject
     private AttestationService attestationService;
@@ -40,49 +46,128 @@ public class AttestationController {
     private DataMapperService dataMapperService;
 
     @Inject
+    private CommonVerifiers commonVerifiers;
+
+    @Inject
+    private AttestationSuperGluuController attestationSuperGluuController;
+
+    @Inject
     private AppConfiguration appConfiguration;
 
+    @Inject
+    private ErrorResponseFactory errorResponseFactory;
+
     @POST
-    @Consumes({ "application/json" })
-    @Produces({ "application/json" })
+    @Consumes({"application/json"})
+    @Produces({"application/json"})
     @Path("/options")
     public Response register(String content) {
-        if (appConfiguration.getFido2Configuration() == null) {
-            return Response.status(Status.FORBIDDEN).build();
-        }
-
-        JsonNode params;
         try {
-        	params = dataMapperService.readTree(content);
-        } catch (IOException ex) {
-            throw new Fido2RpRuntimeException("Failed to parse options attestation request", ex);
+            if (appConfiguration.getFido2Configuration() == null) {
+                throw errorResponseFactory.forbiddenException();
+            }
+
+            JsonNode params;
+            try {
+                params = dataMapperService.readTree(content);
+            } catch (IOException ex) {
+                throw errorResponseFactory.invalidRequest(ex.getMessage(), ex);
+            }
+
+            commonVerifiers.verifyNotUseGluuParameters(params);
+            JsonNode result = attestationService.options(params);
+
+            ResponseBuilder builder = Response.ok().entity(result.toString());
+            return builder.build();
+
+        } catch (WebApplicationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unknown Error: {}", e.getMessage(), e);
+            throw errorResponseFactory.unknownError(e.getMessage());
         }
-
-        JsonNode result = attestationService.options(params);
-
-        ResponseBuilder builder = Response.ok().entity(result.toString());
-        return builder.build();
     }
 
     @POST
-    @Consumes({ "application/json" })
-    @Produces({ "application/json" })
+    @Consumes({"application/json"})
+    @Produces({"application/json"})
     @Path("/result")
     public Response verify(String content) {
-        if (appConfiguration.getFido2Configuration() == null) {
-            return Response.status(Status.FORBIDDEN).build();
-        }
-
-        JsonNode params;
         try {
-        	params = dataMapperService.readTree(content);
-        } catch (IOException ex) {
-            throw new Fido2RpRuntimeException("Failed to parse finish attestation request", ex) ;
+            if (appConfiguration.getFido2Configuration() == null) {
+                throw errorResponseFactory.forbiddenException();
+            }
+
+            JsonNode params;
+            try {
+                params = dataMapperService.readTree(content);
+            } catch (IOException ex) {
+                throw errorResponseFactory.invalidRequest(ex.getMessage(), ex);
+            }
+
+            commonVerifiers.verifyNotUseGluuParameters(params);
+            JsonNode result = attestationService.verify(params);
+
+            ResponseBuilder builder = Response.ok().entity(result.toString());
+            return builder.build();
+
+        } catch (WebApplicationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unknown Error: {}", e.getMessage(), e);
+            throw errorResponseFactory.unknownError(e.getMessage());
         }
+    }
 
-        JsonNode result = attestationService.verify(params);
+    @GET
+    @Produces({"application/json"})
+    @Path("/registration")
+    public Response startRegistration(@QueryParam("username") String userName, @QueryParam("application") String appId, @QueryParam("session_id") String sessionId, @QueryParam("enrollment_code") String enrollmentCode) {
+        try {
+            if ((appConfiguration.getFido2Configuration() == null) && !appConfiguration.isSuperGluuEnabled()) {
+                throw errorResponseFactory.forbiddenException();
+            }
 
-        ResponseBuilder builder = Response.ok().entity(result.toString());
-        return builder.build();
+            log.debug("Start registration: username = {}, application = {}, session_id = {}, enrollment_code = {}", userName, appId, sessionId, enrollmentCode);
+
+            JsonNode result = attestationSuperGluuController.startRegistration(userName, appId, sessionId, enrollmentCode);
+
+            log.debug("Prepared U2F_V2 registration options request: {}", result.toString());
+
+            ResponseBuilder builder = Response.ok().entity(result.toString());
+            return builder.build();
+
+        } catch (WebApplicationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unknown Error: {}", e.getMessage(), e);
+            throw errorResponseFactory.unknownError(e.getMessage());
+        }
+    }
+
+    @POST
+    @Produces({"application/json"})
+    @Path("/registration")
+    public Response finishRegistration(@FormParam("username") String userName, @FormParam("tokenResponse") String registerResponseString) {
+        try {
+            if ((appConfiguration.getFido2Configuration() == null) && !appConfiguration.isSuperGluuEnabled()) {
+                throw errorResponseFactory.forbiddenException();
+            }
+
+            log.debug("Finish registration: username = {}, tokenResponse = {}", userName, registerResponseString);
+
+            JsonNode result = attestationSuperGluuController.finishRegistration(userName, registerResponseString);
+
+            log.debug("Prepared U2F_V2 registration verify request: {}", result.toString());
+
+            ResponseBuilder builder = Response.ok().entity(result.toString());
+            return builder.build();
+
+        } catch (WebApplicationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unknown Error: {}", e.getMessage(), e);
+            throw errorResponseFactory.unknownError(e.getMessage());
+        }
     }
 }

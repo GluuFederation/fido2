@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2018 Mastercard
  * Copyright (c) 2020 Gluu
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
@@ -13,6 +12,10 @@
 
 package org.gluu.fido2.model.error;
 
+/**
+ * Error class for FIDO2 RP Errors
+ *
+ */
 public class Fido2RPError {
 
     private final String status;

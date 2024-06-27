@@ -11,4 +11,15 @@ import javax.ws.rs.core.Application;
  */
 @ApplicationPath("/restv1")
 public class ResteasyInitializer extends Application {	
+
+	@Override
+    public Set<Class<?>> getClasses() {
+        HashSet<Class<?>> classes = new HashSet<Class<?>>();
+        classes.add(ConfigurationController.class);
+        classes.add(AssertionController.class);
+        classes.add(AttestationController.class);
+
+        return classes;
+    }
+
 }

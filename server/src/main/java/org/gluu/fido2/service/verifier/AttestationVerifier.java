@@ -19,10 +19,10 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.gluu.fido2.entry.Fido2RegistrationData;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
 import org.gluu.fido2.service.AuthenticatorDataParser;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.DataMapperService;
@@ -53,12 +53,14 @@ public class AttestationVerifier {
     @Inject
     private AttestationProcessorFactory attestationProcessorFactory;
 
-    public CredAndCounterData verifyAuthenticatorAttestationResponse(JsonNode response, Fido2RegistrationData credential) {
-        if (!(response.hasNonNull("attestationObject") && response.hasNonNull("clientDataJSON"))) {
-            throw new Fido2RuntimeException("Authenticator data is invalid");
+    @Inject
+    private ErrorResponseFactory errorResponseFactory;
+
+    public CredAndCounterData verifyAuthenticatorAttestationResponse(JsonNode authenticatorResponse, Fido2RegistrationData credential) {
+        if (!(authenticatorResponse.hasNonNull("attestationObject") && authenticatorResponse.hasNonNull("clientDataJSON"))) {
+            throw errorResponseFactory.invalidRequest("Authenticator data is invalid");
         }
 
-        JsonNode authenticatorResponse = response;
         String base64AuthenticatorData = authenticatorResponse.get("attestationObject").asText();
         String clientDataJson = authenticatorResponse.get("clientDataJSON").asText();
         byte[] authenticatorDataBuffer = base64Service.urlDecode(base64AuthenticatorData);
@@ -67,14 +69,14 @@ public class AttestationVerifier {
         try {
             AuthData authData;
             if (authenticatorDataBuffer == null) {
-                throw new Fido2RuntimeException("Attestation object is empty");
+                throw errorResponseFactory.invalidRequest("Attestation object is empty");
             }
             JsonNode authenticatorDataNode = dataMapperService.cborReadTree(authenticatorDataBuffer);
             if (authenticatorDataNode == null) {
-                throw new Fido2RuntimeException("Attestation JSON is empty");
+                throw errorResponseFactory.invalidRequest("Attestation JSON is empty");
             }
             String fmt = commonVerifiers.verifyFmt(authenticatorDataNode, "fmt");
-            log.debug("Authenticator data {} {}", fmt, authenticatorDataNode.toString());
+            log.debug("Authenticator data {} {}", fmt, authenticatorDataNode);
             
             credential.setAttestationType(fmt);
             
@@ -95,7 +97,7 @@ public class AttestationVerifier {
 
             return credIdAndCounters;
         } catch (IOException ex) {
-            throw new Fido2RuntimeException("Failed to parse and verify authenticator attestation response data", ex);
+            throw errorResponseFactory.invalidRequest("Failed to parse and verify authenticator attestation response data", ex);
         }
     }
 

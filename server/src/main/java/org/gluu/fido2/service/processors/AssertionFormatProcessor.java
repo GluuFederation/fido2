@@ -14,9 +14,13 @@
 package org.gluu.fido2.service.processors;
 
 import org.gluu.fido2.ctap.AttestationFormat;
-import org.gluu.fido2.model.entry.Fido2AuthenticationData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
+import org.gluu.fido2.entry.Fido2AuthenticationData;
+import org.gluu.fido2.entry.Fido2RegistrationData;
 
+/**
+ * Interface class for AssertionFormatProcessor
+ *
+ */
 public interface AssertionFormatProcessor {
 
     AttestationFormat getAttestationFormat();

@@ -22,11 +22,11 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.gluu.fido2.ctap.AttestationFormat;
 import org.gluu.fido2.ctap.AuthenticatorAttachment;
+import org.gluu.fido2.entry.Fido2AuthenticationData;
+import org.gluu.fido2.entry.Fido2RegistrationData;
 import org.gluu.fido2.exception.Fido2CompromisedDevice;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.AuthData;
-import org.gluu.fido2.model.entry.Fido2AuthenticationData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
 import org.gluu.fido2.service.AuthenticatorDataParser;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CoseService;
@@ -39,6 +39,10 @@ import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * Class which processes assertions of "packed" fmt (attestation type)
+ *
+ */
 @ApplicationScoped
 public class PackedAssertionFormatProcessor implements AssertionFormatProcessor {
 
@@ -66,6 +70,12 @@ public class PackedAssertionFormatProcessor implements AssertionFormatProcessor 
     @Inject
     private Base64Service base64Service;
 
+    @Inject
+    private DigestUtilService digestUtilService;
+
+    @Inject
+    private HexUtilService hexUtilService;
+
     @Override
     public AttestationFormat getAttestationFormat() {
         return AttestationFormat.packed;
@@ -80,7 +90,7 @@ public class PackedAssertionFormatProcessor implements AssertionFormatProcessor 
         log.debug("User verification option {}", authenticationEntity.getUserVerificationOption());
         userVerificationVerifier.verifyUserVerificationOption(authenticationEntity.getUserVerificationOption(), authData);
 
-        byte[] clientDataHash = DigestUtils.getSha256Digest().digest(base64Service.urlDecode(clientDataJson));
+        byte[] clientDataHash = digestUtilService.sha256Digest(base64Service.urlDecode(clientDataJson));
 
         try {
             int counter = authenticatorDataParser.parseCounter(authData.getCounters());
@@ -90,15 +100,14 @@ public class PackedAssertionFormatProcessor implements AssertionFormatProcessor 
             JsonNode uncompressedECPointNode = dataMapperService.cborReadTree(base64Service.urlDecode(registration.getUncompressedECPoint()));
             PublicKey publicKey = coseService.createUncompressedPointFromCOSEPublicKey(uncompressedECPointNode);
 
-            log.debug("Uncompressed ECpoint node {}", uncompressedECPointNode.toString());
-            log.debug("EC Public key hex {}", Hex.encodeHexString(publicKey.getEncoded()));
-            // apple algorithm = -7
+            log.debug("Uncompressed ECpoint node {}", uncompressedECPointNode);
+            log.debug("EC Public key hex {}", hexUtilService.encodeHexString(publicKey.getEncoded()));
+            // apple algorithm = -7preferred
             // windows hello algorithm is -257
             log.debug("registration.getSignatureAlgorithm(): "+registration.getSignatureAlgorithm());
-            log.debug("Platform authenticator: "+ String.valueOf(registration.getAttenstationRequest().contains(AuthenticatorAttachment.PLATFORM.getAttachment()) ? -7 : registration.getSignatureAlgorithm()));
+            log.debug("Platform authenticator: "+ (registration.getAttenstationRequest().contains(AuthenticatorAttachment.PLATFORM.getAttachment()) ? -7 : registration.getSignatureAlgorithm()));
             authenticatorDataVerifier.verifyAssertionSignature(authData, clientDataHash, signature, publicKey, registration.getAttenstationRequest().contains(AuthenticatorAttachment.PLATFORM.getAttachment()) ? -7 : registration.getSignatureAlgorithm());
-                
-            
+           
         } catch (Fido2CompromisedDevice ex) {
         	throw ex;
         } catch (Exception ex) {

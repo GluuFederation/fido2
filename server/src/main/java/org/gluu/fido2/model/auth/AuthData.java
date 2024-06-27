@@ -14,6 +14,7 @@
 package org.gluu.fido2.model.auth;
 
 /**
+ * authData structure from https://www.w3.org/TR/webauthn/#authenticator-data
  * @author Yuriy Movchan
  * @version March 9, 2020
  */

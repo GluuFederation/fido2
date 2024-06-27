@@ -30,6 +30,13 @@ import org.gluu.fido2.ctap.AttestationFormat;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.service.processors.AttestationFormatProcessor;
 
+/**
+ * The attestationObject contains base64url encoded buffer of CBOR encoded
+ * attestation object. When parsed, the "fmt" value contains the attestation
+ * format. 
+ * AttestationProcessorFactory - Factory Class that returns Processor based on the fmt
+ * 
+ */
 @ApplicationScoped
 public class AttestationProcessorFactory {
 

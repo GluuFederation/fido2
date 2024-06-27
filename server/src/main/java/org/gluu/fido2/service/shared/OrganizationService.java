@@ -10,10 +10,19 @@ import javax.enterprise.context.ApplicationScoped;
 
 import org.gluu.model.ApplicationType;
 
+/**
+ * Obtain Organization Info
+ *
+ */
 @ApplicationScoped
-public class OrganizationService extends org.gluu.service.OrganizationService {
+public class OrganizationService extends io.jans.as.common.service.OrganizationService {
 
-	private static final long serialVersionUID = -3912721745240924111L;
+	@Inject
+	private AppConfiguration appConfiguration;
+
+    protected boolean isUseLocalCache() {
+    	return appConfiguration.isUseLocalCache();
+    }
 
 	@Override
 	public ApplicationType getApplicationType() {

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.fasterxml.jackson.dataformat.cbor.CBORParser;
 
 /**
+ * Conversions to/from JSON format and to/from CBOR format
  * @author Yuriy Movchan
  * @version May 08, 2020
  */
@@ -33,6 +34,7 @@ public class DataMapperService {
     private Logger log;
 
     private ObjectMapper objectMapper;
+	private ObjectMapper jaxbObjectMapper;
 
     private CBORFactory cborFactory;
     private ObjectMapper cborObjectMapper;
@@ -42,6 +44,7 @@ public class DataMapperService {
         this.objectMapper = new ObjectMapper();
         this.cborFactory = new CBORFactory();
         this.cborObjectMapper = new ObjectMapper(cborFactory);
+        this.jaxbObjectMapper = jsonMapperWithWrapRoot();
     }
 
     public JsonNode readTree(byte[] content) throws IOException {
@@ -54,6 +57,10 @@ public class DataMapperService {
 
     public JsonNode readTree(BufferedReader reader) throws IOException {
         return objectMapper.readTree(reader);
+    }
+
+    public <T> T readValue(String content, Class<T> clazz) throws IOException {
+        return jaxbObjectMapper.readValue(content, clazz);
     }
 
     public ObjectNode createObjectNode() {
@@ -80,4 +87,28 @@ public class DataMapperService {
         return objectMapper.convertValue(fromValue, toValueType);
     }
 
+    public String writeValueAsString(Object value) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(value);
+    }
+
+    public <T> T readValueString(String content, Class<T> clazz) throws JsonProcessingException {
+        return objectMapper.readValue(content, clazz);
+    }
+
+    private ObjectMapper createJsonMapperWithJaxb() {
+        final AnnotationIntrospector jaxb = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
+        final AnnotationIntrospector jackson = new JacksonAnnotationIntrospector();
+
+        final AnnotationIntrospector pair = AnnotationIntrospector.pair(jackson, jaxb);
+
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.getDeserializationConfig().with(pair);
+        mapper.getSerializationConfig().with(pair);
+
+        return mapper;
+    }
+
+    private ObjectMapper jsonMapperWithWrapRoot() {
+        return createJsonMapperWithJaxb().configure(SerializationFeature.WRAP_ROOT_VALUE, true);
+    }
 }

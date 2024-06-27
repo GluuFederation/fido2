@@ -27,10 +27,10 @@ import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.gluu.fido2.androind.AndroidKeyUtils;
 import org.gluu.fido2.ctap.AttestationFormat;
+import org.gluu.fido2.entry.Fido2RegistrationData;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
 import org.gluu.fido2.service.CertificateService;
 import org.gluu.fido2.service.mds.AttestationCertificateService;
 import org.gluu.fido2.service.processors.AttestationFormatProcessor;
@@ -41,6 +41,10 @@ import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * Attestation processor for attestations of fmt = android-key
+ *
+ */
 @ApplicationScoped
 public class AndroidKeyAttestationProcessor implements AttestationFormatProcessor {
 
@@ -65,6 +69,15 @@ public class AndroidKeyAttestationProcessor implements AttestationFormatProcesso
     @Inject
     private AttestationCertificateService attestationCertificateService;
 
+    @Inject
+    private AppConfiguration appConfiguration;
+
+    @Inject
+    private Base64Service base64Service;
+
+    @Inject
+    private ErrorResponseFactory errorResponseFactory;
+
     @Override
     public AttestationFormat getAttestationFormat() {
         return AttestationFormat.android_key;
@@ -72,46 +85,58 @@ public class AndroidKeyAttestationProcessor implements AttestationFormatProcesso
 
     @Override
     public void process(JsonNode attStmt, AuthData authData, Fido2RegistrationData credential, byte[] clientDataHash,
-            CredAndCounterData credIdAndCounters) {
+                        CredAndCounterData credIdAndCounters) {
 
         log.debug("Android-key payload");
 
         Iterator<JsonNode> i = attStmt.get("x5c").elements();
 
-        ArrayList<String> certificatePath = new ArrayList();
+        ArrayList<String> certificatePath = new ArrayList<>();
         while (i.hasNext()) {
             certificatePath.add(i.next().asText());
         }
         List<X509Certificate> certificates = certificateService.getCertificates(certificatePath);
         List<X509Certificate> trustAnchorCertificates = attestationCertificateService.getAttestationRootCertificates(authData, certificates);
 
-        X509Certificate verifiedCert = certificateVerifier.verifyAttestationCertificates(certificates, trustAnchorCertificates);
-
-        try {
-            ASN1Sequence extensionData = androidKeyUtils.extractAttestationSequence(verifiedCert);
-            int attestationVersion = AndroidKeyUtils.getIntegerFromAsn1(extensionData.getObjectAt(AndroidKeyUtils.ATTESTATION_VERSION_INDEX));
-            int attestationSecurityLevel = AndroidKeyUtils
-                    .getIntegerFromAsn1(extensionData.getObjectAt(AndroidKeyUtils.ATTESTATION_SECURITY_LEVEL_INDEX));
-            int keymasterSecurityLevel = AndroidKeyUtils
-                    .getIntegerFromAsn1(extensionData.getObjectAt(AndroidKeyUtils.KEYMASTER_SECURITY_LEVEL_INDEX));
-            byte[] attestationChallenge = ((ASN1OctetString) extensionData.getObjectAt(AndroidKeyUtils.ATTESTATION_CHALLENGE_INDEX)).getOctets();
-
-            if (!Arrays.equals(clientDataHash, attestationChallenge)) {
-                throw new Fido2RuntimeException("Invalid android key attestation");
+        if (appConfiguration.getFido2Configuration().isSkipValidateMdsInAttestationEnabled()) {
+            log.warn("SkipValidateMdsInAttestation is enabled");
+            credIdAndCounters.setAttestationType(getAttestationFormat().getFmt());
+            credIdAndCounters.setCredId(base64Service.urlEncodeToString(authData.getCredId()));
+            credIdAndCounters.setUncompressedEcPoint(base64Service.urlEncodeToString(authData.getCosePublicKey()));
+        } else {
+            X509Certificate verifiedCert;
+            try {
+                verifiedCert = certificateVerifier.verifyAttestationCertificates(certificates, trustAnchorCertificates);
+            } catch (Fido2RuntimeException e) {
+                log.error("Error on verify attestation certificates: {}", e.getMessage(), e);
+                throw errorResponseFactory.badRequestException(AttestationErrorResponseType.ANDROID_KEY_ERROR, "Error on verify attestation certificates");
             }
 
-            ASN1Encodable[] softwareEnforced = ((ASN1Sequence) extensionData.getObjectAt(AndroidKeyUtils.SW_ENFORCED_INDEX)).toArray();
-            ASN1Encodable[] teeEnforced = ((ASN1Sequence) extensionData.getObjectAt(AndroidKeyUtils.TEE_ENFORCED_INDEX)).toArray();
+            try {
+                ASN1Sequence extensionData = androidKeyUtils.extractAttestationSequence(verifiedCert);
+                int attestationVersion = AndroidKeyUtils.getIntegerFromAsn1(extensionData.getObjectAt(AndroidKeyUtils.ATTESTATION_VERSION_INDEX));
+                int attestationSecurityLevel = AndroidKeyUtils
+                        .getIntegerFromAsn1(extensionData.getObjectAt(AndroidKeyUtils.ATTESTATION_SECURITY_LEVEL_INDEX));
+                int keymasterSecurityLevel = AndroidKeyUtils
+                        .getIntegerFromAsn1(extensionData.getObjectAt(AndroidKeyUtils.KEYMASTER_SECURITY_LEVEL_INDEX));
+                byte[] attestationChallenge = ((ASN1OctetString) extensionData.getObjectAt(AndroidKeyUtils.ATTESTATION_CHALLENGE_INDEX)).getOctets();
 
-        } catch (Exception e) {
-            log.warn("Problem with android key", e);
-            throw new Fido2RuntimeException("Problem with android key");
+                if (!Arrays.equals(clientDataHash, attestationChallenge)) {
+                    throw errorResponseFactory.badRequestException(AttestationErrorResponseType.ANDROID_KEY_ERROR, "Invalid android key attestation");
+                }
+
+                ASN1Encodable[] softwareEnforced = ((ASN1Sequence) extensionData.getObjectAt(AndroidKeyUtils.SW_ENFORCED_INDEX)).toArray();
+                ASN1Encodable[] teeEnforced = ((ASN1Sequence) extensionData.getObjectAt(AndroidKeyUtils.TEE_ENFORCED_INDEX)).toArray();
+
+                String signature = commonVerifiers.verifyBase64String(attStmt.get("sig"));
+                authenticatorDataVerifier.verifyAttestationSignature(authData, clientDataHash, signature, verifiedCert, authData.getKeyType());
+
+            } catch (WebApplicationException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("Problem with android key: {}", e.getMessage());
+                throw errorResponseFactory.badRequestException(AttestationErrorResponseType.ANDROID_KEY_ERROR, "Problem with android key");
+            }
         }
-        String signature = commonVerifiers.verifyBase64String(attStmt.get("sig"));
-        authenticatorDataVerifier.verifyAttestationSignature(authData, clientDataHash, signature, verifiedCert, authData.getKeyType());
-
-        // credIdAndCounters.setAttestationType(getAttestationFormat().getFmt());
-        // credIdAndCounters.setCredId(base64Service.urlEncodeToString(authData.getCredId()));
-        // credIdAndCounters.setUncompressedEcPoint(base64Service.urlEncodeToString(authData.getCOSEPublicKey()));
     }
 }

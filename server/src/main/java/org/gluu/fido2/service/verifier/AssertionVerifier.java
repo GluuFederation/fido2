@@ -16,9 +16,9 @@ package org.gluu.fido2.service.verifier;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.gluu.fido2.entry.Fido2AuthenticationData;
+import org.gluu.fido2.entry.Fido2RegistrationData;
 import org.gluu.fido2.exception.Fido2RuntimeException;
-import org.gluu.fido2.model.entry.Fido2AuthenticationData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
 import org.gluu.fido2.service.processor.assertion.AssertionProcessorFactory;
 import org.gluu.fido2.service.processors.AssertionFormatProcessor;
 import org.slf4j.Logger;

@@ -71,14 +71,16 @@ public class ConfigurationFactory {
 	@Inject
 	private Instance<AbstractCryptoProvider> abstractCryptoProviderInstance;
 
+	private ErrorResponseFactory errorResponseFactory;
+
 	public final static String PERSISTENCE_CONFIGUARION_RELOAD_EVENT_TYPE = "persistenceConfigurationReloadEvent";
 	public final static String BASE_CONFIGUARION_RELOAD_EVENT_TYPE = "baseConfigurationReloadEvent";
 
 	private final static int DEFAULT_INTERVAL = 30; // 30 seconds
 
 	static {
-		if (System.getProperty("gluu.base") != null) {
-			BASE_DIR = System.getProperty("gluu.base");
+		if (System.getProperty("jans.base") != null) {
+			BASE_DIR = System.getProperty("jans.base");
 		} else if ((System.getProperty("catalina.base") != null) && (System.getProperty("catalina.base.ignore") == null)) {
 			BASE_DIR = System.getProperty("catalina.base");
 		} else if (System.getProperty("catalina.home") != null) {
@@ -93,7 +95,7 @@ public class ConfigurationFactory {
 	private static final String BASE_DIR;
 	private static final String DIR = BASE_DIR + File.separator + "conf" + File.separator;
 
-	private static final String BASE_PROPERTIES_FILE = DIR + "gluu.properties";
+	private static final String BASE_PROPERTIES_FILE = DIR + "jans.properties";
 	private static final String APP_PROPERTIES_FILE = DIR + "fido2.properties";
 
 	private final String SALT_FILE_NAME = "salt";
@@ -124,6 +126,7 @@ public class ConfigurationFactory {
 			loadBaseConfiguration();
 
 			this.confDir = confDir();
+			log.debug("confDir: {}", confDir);
 
 			String certsDir = this.baseConfiguration.getString("certsDir");
 			if (StringHelper.isEmpty(certsDir)) {
@@ -206,7 +209,7 @@ public class ConfigurationFactory {
 	}
 
 	private boolean isRevisionIncreased() {
-        final Conf conf = loadConfigurationFromLdap("oxRevision");
+        final Conf conf = loadConfigurationFromLdap("jansRevision");
         if (conf == null) {
             return false;
         }
@@ -246,6 +249,12 @@ public class ConfigurationFactory {
 		return staticConf;
 	}
 
+	@Produces
+	@ApplicationScoped
+	public ErrorResponseFactory getFido2ErrorResponseFactory() {
+		return errorResponseFactory;
+	}
+
 	public BaseDnConfiguration getBaseDn() {
 		return getStaticConfiguration().getBaseDn();
 	}
@@ -273,6 +282,7 @@ public class ConfigurationFactory {
 				if (this.loaded) {
 					destroy(AppConfiguration.class);
 					destroy(StaticConfiguration.class);
+//					destroy(Fido2ErrorResponseFactory.class);
 
 					destroyCryptoProviderInstance(AbstractCryptoProvider.class);
 				}
@@ -324,6 +334,9 @@ public class ConfigurationFactory {
 		}
 		if (conf.getStaticConf() != null) {
 			staticConf = conf.getStaticConf();
+		}
+		if (conf.getErrors() != null) {
+			errorResponseFactory = new ErrorResponseFactory(conf.getErrors(), conf.getDynamicConf());
 		}
 	}
 

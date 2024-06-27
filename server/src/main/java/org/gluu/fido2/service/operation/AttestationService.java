@@ -17,15 +17,15 @@ import org.gluu.fido2.ctap.AttestationConveyancePreference;
 import org.gluu.fido2.ctap.AuthenticatorAttachment;
 import org.gluu.fido2.ctap.CoseEC2Algorithm;
 import org.gluu.fido2.ctap.CoseRSAAlgorithm;
-import org.gluu.fido2.ctap.UserVerification;
+import org.gluu.fido2.entry.Fido2RegistrationData;
+import org.gluu.fido2.entry.Fido2RegistrationEntry;
+import org.gluu.fido2.entry.Fido2RegistrationStatus;
+import org.gluu.fido2.entry.UserVerification;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.CredAndCounterData;
 import org.gluu.fido2.model.auth.PublicKeyCredentialDescriptor;
 import org.gluu.fido2.model.conf.AppConfiguration;
 import org.gluu.fido2.model.conf.RequestedParty;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
-import org.gluu.fido2.model.entry.Fido2RegistrationEntry;
-import org.gluu.fido2.model.entry.Fido2RegistrationStatus;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.ChallengeGenerator;
 import org.gluu.fido2.service.DataMapperService;
@@ -41,6 +41,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
+ * Core offering by the FIDO2 server, attestation is invoked upon enrollment
+ *
  * @author Yuriy Movchan
  * @version May 08, 2020
  */
@@ -60,6 +62,9 @@ public class AttestationService {
 	private AttestationVerifier attestationVerifier;
 
 	@Inject
+	private UserSessionIdService userSessionIdService;
+
+	@Inject
 	private DomainVerifier domainVerifier;
 
 	@Inject
@@ -74,16 +79,34 @@ public class AttestationService {
 	@Inject
 	private Base64Service base64Service;
 
-	/*
-	 * Requires mandatory parameters: username, displayName, attestation Support non
-	 * mandatory parameters: authenticatorSelection, documentDomain, extensions,
-	 * timeout
-	 */
-	public JsonNode options(JsonNode params) {
-		log.debug("Attestation options {}", params);
+    @Inject
+    private ExternalFido2Service externalFido2InterceptionService;
 
-		// Verify request parameters
-		commonVerifiers.verifyAttestationOptions(params);
+	@Inject
+    private ErrorResponseFactory errorResponseFactory;
+
+	@Context
+	private HttpServletRequest httpRequest;
+	@Context
+	private HttpServletResponse httpResponse;
+
+    /*
+     * Requires mandatory parameters: username, displayName, attestation Support non
+     * mandatory parameters: authenticatorSelection, documentDomain, extensions,
+     * timeout
+     */
+    public ObjectNode options(JsonNode params) {
+
+        log.debug("Attestation options {}", params);
+
+        // Apply external custom scripts
+        ExternalFido2Context externalFido2InterceptionContext = new ExternalFido2Context(params, httpRequest, httpResponse);
+        boolean externalInterceptContext = externalFido2InterceptionService.registerAttestationStart(params, externalFido2InterceptionContext);
+
+        // Verify request parameters
+        commonVerifiers.verifyAttestationOptions(params);
+
+		boolean oneStep = commonVerifiers.isSuperGluuOneStepMode(params);
 
 		// Create result object
 		ObjectNode optionsResponseNode = dataMapperService.createObjectNode();
@@ -100,7 +123,7 @@ public class AttestationService {
 		log.debug("Put authenticatorSelection {}", authenticatorSelectionNode);
 
 		// Generate and put challenge
-		String challenge = challengeGenerator.getChallenge();
+		String challenge = challengeGenerator.getAttestationChallenge();
 		optionsResponseNode.put("challenge", challenge);
 		log.debug("Put challenge {}", challenge);
 
@@ -127,9 +150,11 @@ public class AttestationService {
 		log.debug("Put user {}", credentialUserEntityNode);
 
 		// Put excludeCredentials
-		ArrayNode excludedCredentials = prepareExcludeCredentials(documentDomain, username);
-		optionsResponseNode.set("excludeCredentials", excludedCredentials);
-		log.debug("Put excludeCredentials {}", excludedCredentials);
+		if (!oneStep) {
+			ArrayNode excludedCredentials = prepareExcludeCredentials(documentDomain, username);
+			optionsResponseNode.set("excludeCredentials", excludedCredentials);
+			log.debug("Put excludeCredentials {}", excludedCredentials);
+		}
 
 		// Copy extensions
 		if (params.hasNonNull("extensions")) {
@@ -138,15 +163,16 @@ public class AttestationService {
 			log.debug("Put extensions {}", extensions);
 		}
 		// incase of Apple's Touch ID and Window's Hello; timeout,status and error message cause a NotAllowedError on the browser, so skipping these attributes
-		if(AuthenticatorAttachment.CROSS_PLATFORM.equals(authenticatorSelectionNode.get("authenticatorAttachment").asText()))
-		{
-			// Put timeout
-			int timeout = commonVerifiers.verifyTimeout(params);
-			log.debug("Put timeout {}", timeout);
-			optionsResponseNode.put("timeout", timeout);
+		if (params.hasNonNull("authenticatorAttachment")) {
+			if (AuthenticatorAttachment.CROSS_PLATFORM.getAttachment().equals(authenticatorSelectionNode.get("authenticatorAttachment").asText())) {
+				// Put timeout
+				int timeout = commonVerifiers.verifyTimeout(params);
+				log.debug("Put timeout {}", timeout);
+				optionsResponseNode.put("timeout", timeout);
 
-			optionsResponseNode.put("status", "ok");
-			optionsResponseNode.put("errorMessage", "");
+				optionsResponseNode.put("status", "ok");
+				optionsResponseNode.put("errorMessage", "");
+			}
 		}
 		
 		// Store request in DB
@@ -156,19 +182,44 @@ public class AttestationService {
 		entity.setChallenge(challenge);
 		entity.setDomain(documentDomain);
 		entity.setStatus(Fido2RegistrationStatus.pending);
+		if (params.hasNonNull(CommonVerifiers.SUPER_GLUU_APP_ID)) {
+			entity.setApplicationId(params.get(CommonVerifiers.SUPER_GLUU_APP_ID).asText());
+		} else {
+			entity.setApplicationId(documentDomain);
+		}
 
 		// Store original requests
 		entity.setAttenstationRequest(params.toString());
 
-		registrationPersistenceService.save(entity);
+		Fido2RegistrationEntry registrationEntry = registrationPersistenceService.buildFido2RegistrationEntry(entity, oneStep);
+		if (params.hasNonNull("session_id")) {
+			registrationEntry.setSessionStateId(params.get("session_id").asText());
+		}
 
-		log.debug("Saved in LDAP");
+		// Set expiration
+		int unfinishedRequestExpiration = appConfiguration.getFido2Configuration().getUnfinishedRequestExpiration();
+        registrationEntry.setExpiration(unfinishedRequestExpiration);
+
+		registrationPersistenceService.save(registrationEntry);
+
+		log.debug("Saved in DB");
+
+		externalFido2InterceptionContext.addToContext(registrationEntry, null);
+		externalFido2InterceptionService.registerAttestationFinish(params, externalFido2InterceptionContext);
 
 		return optionsResponseNode;
 	}
 
-	public JsonNode verify(JsonNode params) {
+	public ObjectNode verify(JsonNode params) {
 		log.debug("Attestation verify {}", params);
+
+        // Apply external custom scripts
+        ExternalFido2Context externalFido2InterceptionContext = new ExternalFido2Context(params, httpRequest, httpResponse);
+        boolean externalInterceptContext = externalFido2InterceptionService.verifyAttestationStart(params, externalFido2InterceptionContext);
+
+        boolean superGluu = commonVerifiers.hasSuperGluu(params);
+        boolean oneStep = commonVerifiers.isSuperGluuOneStepMode(params);
+        boolean cancelRequest = commonVerifiers.isSuperGluuCancelRequest(params);
 
 		// Verify if there are mandatory request parameters
 		commonVerifiers.verifyBasicPayload(params);
@@ -179,15 +230,17 @@ public class AttestationService {
 
 		// Verify client data
 		JsonNode clientDataJSONNode = commonVerifiers.verifyClientJSON(responseNode);
-		commonVerifiers.verifyClientJSONTypeIsCreate(clientDataJSONNode);
+		if (!superGluu) {
+			commonVerifiers.verifyClientJSONTypeIsCreate(clientDataJSONNode);
+		}
 
 		// Get challenge
 		String challenge = commonVerifiers.getChallenge(clientDataJSONNode);
 
 		// Find registration entry
-		Fido2RegistrationEntry registrationEntry = registrationPersistenceService.findByChallenge(challenge)
-				.parallelStream().findAny().orElseThrow(() -> new Fido2RuntimeException(
-						String.format("Can't find associated attestatioan request by challenge '%s'", challenge)));
+		Fido2RegistrationEntry registrationEntry = registrationPersistenceService.findByChallenge(challenge, oneStep)
+				.parallelStream().findAny().orElseThrow(() ->
+					errorResponseFactory.badRequestException(AttestationErrorResponseType.INVALID_CHALLENGE, String.format("Can't find associated attestation request by challenge '%s'", challenge)));
 		Fido2RegistrationData registrationData = registrationEntry.getRegistrationData();
 
 		// Verify domain
@@ -205,7 +258,14 @@ public class AttestationService {
 
 		registrationData.setPublicKeyId(keyId);
 		registrationData.setType("public-key");
-		registrationData.setStatus(Fido2RegistrationStatus.registered);
+		registrationData.setAttestationType(attestationData.getAttestationType());
+
+        // Support cancel request
+        if (cancelRequest) {
+        	registrationData.setStatus(Fido2RegistrationStatus.canceled);
+        } else {
+        	registrationData.setStatus(Fido2RegistrationStatus.registered);
+        }
 
 		// Store original response
 		registrationData.setAttenstationResponse(params.toString());
@@ -214,7 +274,43 @@ public class AttestationService {
 		// Fido2RegistrationData to minimize DB updates
 		registrationData.setCounter(registrationEntry.getCounter());
 
+		JsonNode responseDeviceData = responseNode.get("deviceData");
+		if (responseDeviceData != null && responseDeviceData.isTextual()) {
+            try {
+				Fido2DeviceData deviceData = dataMapperService.readValue(
+						new String(base64Service.urlDecode(responseDeviceData.asText()), StandardCharsets.UTF_8),
+						Fido2DeviceData.class);
+                registrationEntry.setDeviceData(deviceData);
+            } catch (Exception ex) {
+                throw errorResponseFactory.invalidRequest(String.format("Device data is invalid: %s", responseDeviceData), ex);
+            }
+        }
+
+        registrationEntry.setPublicKeyId(registrationData.getPublicKeyId());
+
+        int publicKeyIdHash = registrationPersistenceService.getPublicKeyIdHash(registrationData.getPublicKeyId());
+        registrationEntry.setPublicKeyIdHash(publicKeyIdHash);
+
+        // Get sessionId before cleaning it from registration entry
+        String sessionStateId = registrationEntry.getSessionStateId();
+        registrationEntry.setSessionStateId(null);
+
+        // Set expiration for one_step entry
+        if (oneStep) {
+            int unfinishedRequestExpiration = appConfiguration.getFido2Configuration().getUnfinishedRequestExpiration();
+        	registrationEntry.setExpiration(unfinishedRequestExpiration);
+        } else {
+        	registrationEntry.clearExpiration();
+        }
+
 		registrationPersistenceService.update(registrationEntry);
+
+		// If sessionStateId is not empty update session
+        if (StringHelper.isNotEmpty(sessionStateId)) {
+            log.debug("There is session id. Setting session id attributes");
+
+            userSessionIdService.updateUserSessionIdOnFinishRequest(sessionStateId, registrationEntry.getUserInum(), registrationEntry, true, oneStep);
+        }
 
 		// Create result object
 		ObjectNode finishResponseNode = dataMapperService.createObjectNode();
@@ -227,6 +323,9 @@ public class AttestationService {
 		finishResponseNode.put("status", "ok");
 		finishResponseNode.put("errorMessage", "");
 
+		externalFido2InterceptionContext.addToContext(registrationEntry, null);
+		externalFido2InterceptionService.verifyAttestationFinish(params, externalFido2InterceptionContext);
+
 		return finishResponseNode;
 	}
 
@@ -235,8 +334,7 @@ public class AttestationService {
 		// default is cross platform
 		AuthenticatorAttachment authenticatorAttachment = AuthenticatorAttachment.CROSS_PLATFORM;
 		UserVerification userVerification = UserVerification.preferred;
-
-		
+		UserVerification residentKey = UserVerification.preferred;
 
 		Boolean requireResidentKey = false;
 
@@ -249,6 +347,8 @@ public class AttestationService {
 					.verifyUserVerification(authenticatorSelectionNodeParameter.get("userVerification"));
 			requireResidentKey = commonVerifiers
 					.verifyRequireResidentKey(authenticatorSelectionNodeParameter.get("requireResidentKey"));
+			residentKey = commonVerifiers
+					.verifyUserVerification(authenticatorSelectionNodeParameter.get("residentKey"));
 		}
 
 		ObjectNode authenticatorSelectionNode = dataMapperService.createObjectNode();
@@ -261,6 +361,9 @@ public class AttestationService {
 		}
 		if (userVerification != null) {
 			authenticatorSelectionNode.put("userVerification", userVerification.toString());
+		}
+		if (residentKey != null) {
+			authenticatorSelectionNode.put("residentKey", residentKey.toString());
 		}
 
 		return authenticatorSelectionNode;
@@ -347,7 +450,7 @@ public class AttestationService {
 		return null;
 	}
 
-	private String generateUserId() {
+	public String generateUserId() {
 		byte[] buffer = new byte[32];
 		new SecureRandom().nextBytes(buffer);
 
@@ -365,12 +468,11 @@ public class AttestationService {
 
 	private ArrayNode prepareExcludeCredentials(String documentDomain, String username) {
 		List<Fido2RegistrationEntry> existingRegistrations = registrationPersistenceService
-				.findAllRegisteredByUsername(username);
+				.findByRpRegisteredUserDevices(username, documentDomain);
 		List<JsonNode> excludedKeys = existingRegistrations.parallelStream()
-				.filter(f -> StringHelper.equals(documentDomain, f.getRegistrationData().getDomain()))
 				.filter(f -> StringHelper.isNotEmpty(f.getRegistrationData().getPublicKeyId()))
 				.map(f -> dataMapperService.convertValue(new PublicKeyCredentialDescriptor(
-						f.getRegistrationData().getType(), new String[] { "usb", "ble", "nfc", "internal" },
+						f.getRegistrationData().getType(), new String[] { "usb", "ble", "nfc", "internal", "net", "qr" },
 						f.getRegistrationData().getPublicKeyId()), JsonNode.class))
 				.collect(Collectors.toList());
 
@@ -380,4 +482,3 @@ public class AttestationService {
 		return excludedCredentials;
 	}
 
-}

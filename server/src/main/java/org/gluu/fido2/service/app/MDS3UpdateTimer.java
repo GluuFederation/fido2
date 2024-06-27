@@ -25,14 +25,16 @@ import org.gluu.service.timer.schedule.TimerSchedule;
 import org.slf4j.Logger;
 
 /**
+ * Class that periodically updates the mds3 blob in the FIDO2 server
  * @author madhumitas
  *
  */
 @ApplicationScoped
 @Named
+
 public class MDS3UpdateTimer {
 
-	private static final int DEFAULT_INTERVAL = 60 *60*24; // every 24 hours
+	private static final int DEFAULT_INTERVAL = 60 * 60 * 24; // every 24 hours
 
 	@Inject
 	private Logger log;
@@ -46,8 +48,8 @@ public class MDS3UpdateTimer {
 	public void initTimer() {
 		log.info("Initializing MDS3 Update Timer");
 
-		timerEvent.fire(new TimerEvent(new TimerSchedule(DEFAULT_INTERVAL, DEFAULT_INTERVAL), new MDS3UpdateEvent() {},
-				Scheduled.Literal.INSTANCE));
+		timerEvent.fire(new TimerEvent(new TimerSchedule(DEFAULT_INTERVAL, DEFAULT_INTERVAL), new MDS3UpdateEvent() {
+		}, Scheduled.Literal.INSTANCE));
 
 		log.info("Initialized MDS3 Update Timer");
 	}
@@ -55,6 +57,10 @@ public class MDS3UpdateTimer {
 	@Asynchronous
 	public void process(@Observes @Scheduled MDS3UpdateEvent mds3UpdateEvent) {
 		LocalDate nextUpdate = tocService.getNextUpdateDate();
+		if (nextUpdate == null) {
+			log.info("NextUpdate is null");
+			return;
+		}
 		if (nextUpdate.equals(LocalDate.now()) || nextUpdate.isBefore(LocalDate.now())) {
 			log.info("Downloading the latest TOC from https://mds.fidoalliance.org/");
 			try {
@@ -66,7 +72,7 @@ public class MDS3UpdateTimer {
 			}
 			tocService.refresh();
 		} else {
-			log.info( "{} more days for MDS3 Update",LocalDate.now().until(nextUpdate, ChronoUnit.DAYS) );
+			log.info("{} more days for MDS3 Update", LocalDate.now().until(nextUpdate, ChronoUnit.DAYS));
 		}
 	}
 

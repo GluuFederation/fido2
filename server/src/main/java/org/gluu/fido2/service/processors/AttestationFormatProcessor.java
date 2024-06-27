@@ -14,14 +14,19 @@
 package org.gluu.fido2.service.processors;
 
 import org.gluu.fido2.ctap.AttestationFormat;
+import org.gluu.fido2.entry.Fido2RegistrationData;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * Interface class for AttestationFormatProcessor
+ *
+ */
 public interface AttestationFormatProcessor {
     AttestationFormat getAttestationFormat();
 
     void process(JsonNode attStmt, AuthData authData, Fido2RegistrationData credential, byte[] clientDataHash, CredAndCounterData credIdAndCounters);
 }
+
