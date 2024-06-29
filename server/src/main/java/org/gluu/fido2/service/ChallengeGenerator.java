@@ -16,8 +16,8 @@ package org.gluu.fido2.service;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 /**
  * Challenge generator class

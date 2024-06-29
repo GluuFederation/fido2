@@ -16,6 +16,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertPathValidator;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -30,8 +32,10 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.slf4j.Logger;
 
 /**

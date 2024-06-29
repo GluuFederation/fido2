@@ -1,11 +1,27 @@
 package org.gluu.fido2.service.sg.converter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.gluu.as.model.fido.u2f.message.RawRegisterResponse;
-import org.gluu.as.model.fido.u2f.protocol.RegisterResponse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CoseService;
@@ -14,8 +30,8 @@ import org.gluu.fido2.service.DigestService;
 import org.gluu.fido2.service.operation.AttestationService;
 import org.gluu.fido2.service.persist.UserSessionIdService;
 import org.gluu.fido2.service.sg.RawRegistrationService;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+import org.gluu.oxauth.model.fido.u2f.message.RawRegisterResponse;
+import org.gluu.oxauth.model.fido.u2f.protocol.RegisterResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,13 +39,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 @ExtendWith(MockitoExtension.class)
 class AttestationSuperGluuControllerTest {
 

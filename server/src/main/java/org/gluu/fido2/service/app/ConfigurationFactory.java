@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringUtils;
 import org.gluu.exception.ConfigurationException;
 import org.gluu.fido2.model.conf.AppConfiguration;
 import org.gluu.fido2.model.conf.Conf;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.oxauth.model.config.BaseDnConfiguration;
 import org.gluu.oxauth.model.config.StaticConfiguration;
 import org.gluu.oxauth.model.configuration.Configuration;

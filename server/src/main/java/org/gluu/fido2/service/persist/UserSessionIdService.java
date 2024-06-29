@@ -5,21 +5,21 @@ import static org.apache.commons.lang.BooleanUtils.isTrue;
 import java.util.Date;
 import java.util.Map;
 
-import org.slf4j.Logger;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
-import io.jans.as.common.model.session.SessionId;
-import io.jans.as.common.model.session.SessionIdState;
-import io.jans.as.model.config.StaticConfiguration;
-import io.jans.fido2.model.conf.AppConfiguration;
-import io.jans.orm.PersistenceEntryManager;
-import io.jans.orm.model.fido2.Fido2AuthenticationEntry;
-import io.jans.orm.model.fido2.Fido2AuthenticationStatus;
-import io.jans.orm.model.fido2.Fido2RegistrationEntry;
-import io.jans.orm.model.fido2.Fido2RegistrationStatus;
-import io.jans.service.CacheService;
-import io.jans.util.StringHelper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.oxauth.model.config.StaticConfiguration;
+import org.gluu.oxauth.model.session.SessionId;
+import org.gluu.oxauth.model.session.SessionIdState;
+import org.gluu.persist.PersistenceEntryManager;
+import org.gluu.persist.model.fido2.Fido2AuthenticationEntry;
+import org.gluu.persist.model.fido2.Fido2AuthenticationStatus;
+import org.gluu.persist.model.fido2.Fido2RegistrationEntry;
+import org.gluu.persist.model.fido2.Fido2RegistrationStatus;
+import org.gluu.service.CacheService;
+import org.gluu.util.StringHelper;
+import org.slf4j.Logger;
 
 /**
  * Configure user session to confirm Fido2 device authentication

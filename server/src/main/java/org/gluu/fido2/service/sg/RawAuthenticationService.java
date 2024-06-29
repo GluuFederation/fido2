@@ -2,15 +2,16 @@ package org.gluu.fido2.service.sg;
 
 import java.io.IOException;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
+import org.gluu.oxauth.model.fido.u2f.exception.BadInputException;
+import org.gluu.oxauth.model.fido.u2f.message.RawAuthenticateResponse;
+import org.gluu.oxauth.model.util.Base64Util;
+import org.gluu.util.io.ByteDataInputStream;
 import org.slf4j.Logger;
 
-import io.jans.as.model.fido.u2f.exception.BadInputException;
-import io.jans.as.model.fido.u2f.message.RawAuthenticateResponse;
-import io.jans.as.model.util.Base64Util;
-import io.jans.util.io.ByteDataInputStream;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 /**
  * Provides operations with U2F RAW registration response
  *

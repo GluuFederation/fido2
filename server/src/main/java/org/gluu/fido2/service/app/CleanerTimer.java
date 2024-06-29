@@ -7,6 +7,8 @@
 package org.gluu.fido2.service.app;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,10 +22,12 @@ import javax.inject.Named;
 import org.gluu.fido2.model.conf.AppConfiguration;
 import org.gluu.fido2.service.persist.AuthenticationPersistenceService;
 import org.gluu.fido2.service.persist.RegistrationPersistenceService;
+import org.gluu.oxauth.model.config.StaticConfiguration;
 import org.gluu.persist.PersistenceEntryManager;
-import org.gluu.persist.model.base.DeletableEntity;
+import org.gluu.persist.model.base.SimpleBranch;
+import org.gluu.persist.model.fido2.Fido2AuthenticationEntry;
+import org.gluu.persist.model.fido2.Fido2RegistrationEntry;
 import org.gluu.search.filter.Filter;
-import org.gluu.service.cache.CacheProvider;
 import org.gluu.service.cdi.async.Asynchronous;
 import org.gluu.service.cdi.event.CleanerEvent;
 import org.gluu.service.cdi.event.Scheduled;
@@ -32,7 +36,7 @@ import org.gluu.service.timer.schedule.TimerSchedule;
 import org.slf4j.Logger;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 
 /**
  * @author Yuriy Movchan Date: 05/13/2020

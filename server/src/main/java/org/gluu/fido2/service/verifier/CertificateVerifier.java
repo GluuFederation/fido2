@@ -37,10 +37,15 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.gluu.fido2.exception.Fido2MissingAttestationCertException;
 import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
+import org.gluu.fido2.model.mds.AuthenticatorCertificationStatus;
 import org.gluu.fido2.service.Base64Service;
+import org.gluu.fido2.service.CertificateService;
 import org.slf4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 @ApplicationScoped
 public class CertificateVerifier {

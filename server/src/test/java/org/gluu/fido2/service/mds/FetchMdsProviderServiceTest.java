@@ -1,14 +1,33 @@
 package org.gluu.fido2.service.mds;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.nimbusds.jose.JWSObject;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Collections;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+
+import org.apache.commons.lang3.StringUtils;
 import org.gluu.fido2.exception.mds.MdsClientException;
 import org.gluu.fido2.model.conf.AppConfiguration;
 import org.gluu.fido2.model.mds.MdsGetEndpointResponse;
 import org.gluu.fido2.service.DataMapperService;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -18,12 +37,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Collections;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.nimbusds.jose.JWSObject;
 
 @ExtendWith(MockitoExtension.class)
 class FetchMdsProviderServiceTest {

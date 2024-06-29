@@ -1,5 +1,25 @@
 package org.gluu.fido2.service.mds;
 
+import java.util.Collections;
+import java.util.Map;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
+import org.gluu.fido2.exception.mds.MdsClientException;
+import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.mds.MdsGetEndpointResponse;
+import org.gluu.fido2.service.DataMapperService;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.slf4j.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 @ApplicationScoped

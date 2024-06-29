@@ -6,6 +6,7 @@
 
 package org.gluu.fido2.model.conf;
 
+import org.gluu.fido2.model.error.Fido2ErrorMessages;
 import org.gluu.oxauth.model.config.StaticConfiguration;
 import org.gluu.persist.annotation.AttributeName;
 import org.gluu.persist.annotation.DN;

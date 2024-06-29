@@ -1,5 +1,10 @@
 package org.gluu.fido2.service;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+import javax.enterprise.context.ApplicationScoped;
+
 /**
  * Method to calculate digests
  *

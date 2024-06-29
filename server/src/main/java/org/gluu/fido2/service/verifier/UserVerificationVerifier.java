@@ -10,10 +10,10 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.codec.binary.Hex;
-import org.gluu.fido2.entry.UserVerification;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.service.AuthenticatorDataParser;
+import org.gluu.persist.model.fido2.UserVerification;
 import org.slf4j.Logger;
 
 /**

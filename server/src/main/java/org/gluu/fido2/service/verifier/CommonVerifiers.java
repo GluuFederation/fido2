@@ -7,9 +7,9 @@
 package org.gluu.fido2.service.verifier;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
@@ -21,20 +21,27 @@ import org.apache.commons.lang.StringUtils;
 import org.gluu.fido2.ctap.AttestationConveyancePreference;
 import org.gluu.fido2.ctap.AuthenticatorAttachment;
 import org.gluu.fido2.ctap.TokenBindingSupport;
-import org.gluu.fido2.entry.UserVerification;
 import org.gluu.fido2.exception.Fido2CompromisedDevice;
 import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.assertion.AssertionErrorResponseType;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
 import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.processors.AttestationFormatProcessor;
+import org.gluu.fido2.sg.SuperGluuMode;
+import org.gluu.persist.model.fido2.UserVerification;
 import org.gluu.service.net.NetworkService;
 import org.gluu.util.StringHelper;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import tss.tpm.TPMS_ATTEST;
+import tss.tpm.TPMT_PUBLIC;
 
 
 /**

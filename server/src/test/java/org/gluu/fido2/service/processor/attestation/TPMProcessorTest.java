@@ -1,8 +1,31 @@
 package org.gluu.fido2.service.processor.attestation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
 import org.gluu.fido2.model.conf.AppConfiguration;
@@ -15,28 +38,20 @@ import org.gluu.fido2.service.mds.AttestationCertificateService;
 import org.gluu.fido2.service.verifier.CertificateVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.fido2.service.verifier.SignatureVerifier;
-import org.gluu.orm.model.fido2.Fido2RegistrationData;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import tss.tpm.TPMS_ATTEST;
 import tss.tpm.TPMT_PUBLIC;
-
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TPMProcessorTest {

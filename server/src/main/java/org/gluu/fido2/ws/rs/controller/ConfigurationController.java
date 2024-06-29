@@ -13,9 +13,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
 
 import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.DataMapperService;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;

@@ -1,11 +1,17 @@
 package org.gluu.fido2.model.error;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.jans.as.model.configuration.Configuration;
-import io.jans.model.error.ErrorMessage;
-import jakarta.xml.bind.annotation.*;
-
 import java.util.List;
+
+import org.gluu.model.error.ErrorMessage;
+import org.gluu.oxauth.model.configuration.Configuration;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "errors")
 @XmlAccessorType(XmlAccessType.FIELD)

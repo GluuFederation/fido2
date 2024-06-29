@@ -22,6 +22,7 @@ import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.X509TrustManager;
 

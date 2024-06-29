@@ -1,8 +1,30 @@
 package org.gluu.fido2.service.processor.attestation;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import static org.gluu.util.TestUtil.instanceMapper;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.List;
+
+import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
 import org.gluu.fido2.model.conf.AppConfiguration;
@@ -15,11 +37,7 @@ import org.gluu.fido2.service.mds.AttestationCertificateService;
 import org.gluu.fido2.service.verifier.AuthenticatorDataVerifier;
 import org.gluu.fido2.service.verifier.CertificateVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
-import org.gluu.orm.model.fido2.Fido2RegistrationData;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,14 +45,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import javax.net.ssl.X509TrustManager;
-import java.security.cert.X509Certificate;
-import java.util.Collections;
-import java.util.List;
-
-import static org.gluu.util.TestUtil.instanceMapper;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @ExtendWith(MockitoExtension.class)
 class PackedAttestationProcessorTest {

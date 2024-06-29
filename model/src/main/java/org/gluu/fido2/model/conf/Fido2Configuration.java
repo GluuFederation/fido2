@@ -4,8 +4,9 @@ package org.gluu.fido2.model.conf;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.gluu.doc.annotation.DocProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.jans.doc.annotation.DocProperty;
 
 /**
  * FIDO 2 configuration

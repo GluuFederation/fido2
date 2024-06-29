@@ -11,17 +11,23 @@ import java.io.IOException;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
 
-import org.gluu.fido2.exception.Fido2RpRuntimeException;
 import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.operation.AssertionService;
+import org.gluu.fido2.service.sg.converter.AssertionSuperGluuController;
+import org.gluu.fido2.service.verifier.CommonVerifiers;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

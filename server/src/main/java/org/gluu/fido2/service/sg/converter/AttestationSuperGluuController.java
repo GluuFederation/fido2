@@ -5,36 +5,32 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
 
-import io.jans.fido2.model.attestation.AttestationErrorResponseType;
-import io.jans.fido2.model.error.ErrorResponseFactory;
-import io.jans.fido2.model.assertion.AssertionErrorResponseType;
-import org.apache.commons.lang3.ArrayUtils;
-import org.slf4j.Logger;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.gluu.fido2.ctap.AttestationFormat;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
+import org.gluu.fido2.service.AuthenticatorDataParser;
+import org.gluu.fido2.service.Base64Service;
+import org.gluu.fido2.service.CoseService;
+import org.gluu.fido2.service.DataMapperService;
+import org.gluu.fido2.service.DigestService;
+import org.gluu.fido2.service.operation.AttestationService;
+import org.gluu.fido2.service.persist.UserSessionIdService;
+import org.gluu.fido2.service.sg.RawRegistrationService;
+import org.gluu.fido2.service.verifier.CommonVerifiers;
+import org.gluu.fido2.sg.SuperGluuMode;
+import org.gluu.oxauth.model.fido.u2f.message.RawRegisterResponse;
+import org.gluu.oxauth.model.fido.u2f.protocol.ClientData;
+import org.gluu.oxauth.model.fido.u2f.protocol.RegisterResponse;
+import org.gluu.util.StringHelper;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.jans.as.model.fido.u2f.message.RawRegisterResponse;
-import io.jans.as.model.fido.u2f.protocol.ClientData;
-import io.jans.as.model.fido.u2f.protocol.RegisterResponse;
-import io.jans.fido2.ctap.AttestationFormat;
-import io.jans.fido2.exception.Fido2RpRuntimeException;
-import io.jans.fido2.exception.Fido2RuntimeException;
-import io.jans.fido2.service.AuthenticatorDataParser;
-import io.jans.fido2.service.Base64Service;
-import io.jans.fido2.service.CoseService;
-import io.jans.fido2.service.DataMapperService;
-import io.jans.fido2.service.DigestService;
-import io.jans.fido2.service.operation.AttestationService;
-import io.jans.fido2.service.persist.UserSessionIdService;
-import io.jans.fido2.service.sg.RawRegistrationService;
-import io.jans.fido2.service.verifier.CommonVerifiers;
-import io.jans.fido2.sg.SuperGluuMode;
-import io.jans.util.StringHelper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * Converters Super Gluu registration request to U2F V2 request

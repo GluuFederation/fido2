@@ -1,7 +1,6 @@
 package org.gluu.u2f.service.persist;
 
 import java.io.IOException;
-import java.security.PublicKey;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -14,9 +13,6 @@ import org.gluu.entry.DeviceRegistration;
 import org.gluu.entry.DeviceRegistrationStatus;
 import org.gluu.fido2.ctap.AttestationFormat;
 import org.gluu.fido2.ctap.CoseEC2Algorithm;
-import org.gluu.fido2.entry.Fido2RegistrationData;
-import org.gluu.fido2.entry.Fido2RegistrationEntry;
-import org.gluu.fido2.entry.Fido2RegistrationStatus;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CoseService;
 import org.gluu.fido2.service.DataMapperService;
@@ -32,6 +28,9 @@ import org.gluu.oxauth.model.config.StaticConfiguration;
 import org.gluu.oxauth.service.common.UserService;
 import org.gluu.persist.PersistenceEntryManager;
 import org.gluu.persist.model.base.SimpleBranch;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
+import org.gluu.persist.model.fido2.Fido2RegistrationEntry;
+import org.gluu.persist.model.fido2.Fido2RegistrationStatus;
 import org.gluu.search.filter.Filter;
 import org.gluu.service.net.NetworkService;
 import org.gluu.util.StringHelper;

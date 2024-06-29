@@ -1,6 +1,21 @@
 package org.gluu.fido2.service.processor.assertion;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.security.PublicKey;
+
 import org.gluu.fido2.exception.Fido2CompromisedDevice;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.AuthData;
@@ -11,9 +26,9 @@ import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.verifier.AuthenticatorDataVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.fido2.service.verifier.UserVerificationVerifier;
-import org.gluu.orm.model.fido2.Fido2AuthenticationData;
-import org.gluu.orm.model.fido2.Fido2RegistrationData;
-import org.gluu.orm.model.fido2.UserVerification;
+import org.gluu.persist.model.fido2.Fido2AuthenticationData;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
+import org.gluu.persist.model.fido2.UserVerification;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,11 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.security.PublicKey;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @ExtendWith(MockitoExtension.class)
 class NoneAssertionFormatProcessorTest {

@@ -2,12 +2,14 @@ package org.gluu.fido2.service.external.context;
 
 import java.util.HashMap;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.gluu.model.custom.script.conf.CustomScriptConfiguration;
+import org.gluu.persist.model.fido2.Fido2AuthenticationEntry;
+import org.gluu.persist.model.fido2.Fido2RegistrationEntry;
+
 import com.fasterxml.jackson.databind.JsonNode;
-import io.jans.model.custom.script.conf.CustomScriptConfiguration;
-import io.jans.orm.model.fido2.Fido2AuthenticationEntry;
-import io.jans.orm.model.fido2.Fido2RegistrationEntry;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 public class ExternalFido2Context extends org.gluu.fido2.service.external.context.ExternalScriptContext {
 

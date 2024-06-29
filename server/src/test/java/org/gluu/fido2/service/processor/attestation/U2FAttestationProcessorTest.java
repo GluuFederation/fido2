@@ -1,7 +1,29 @@
 package org.gluu.fido2.service.processor.attestation;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.nio.file.attribute.UserPrincipal;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 import org.gluu.fido2.exception.Fido2MissingAttestationCertException;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
@@ -16,9 +38,7 @@ import org.gluu.fido2.service.verifier.AuthenticatorDataVerifier;
 import org.gluu.fido2.service.verifier.CertificateVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.fido2.service.verifier.UserVerificationVerifier;
-import org.gluu.orm.model.fido2.Fido2RegistrationData;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,13 +46,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import java.nio.file.attribute.UserPrincipal;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.util.Collections;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 @ExtendWith(MockitoExtension.class)
 class U2FAttestationProcessorTest {

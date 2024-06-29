@@ -13,13 +13,13 @@
 
 package org.gluu.fido2.service.processor.assertion;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
+import java.security.PublicKey;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.gluu.fido2.ctap.AttestationFormat;
 import org.gluu.fido2.ctap.AuthenticatorAttachment;
-import org.gluu.fido2.entry.Fido2AuthenticationData;
-import org.gluu.fido2.entry.Fido2RegistrationData;
 import org.gluu.fido2.exception.Fido2CompromisedDevice;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.AuthData;
@@ -28,14 +28,16 @@ import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CoseService;
 import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.processors.AssertionFormatProcessor;
+import org.gluu.fido2.service.util.DigestUtilService;
+import org.gluu.fido2.service.util.HexUtilService;
 import org.gluu.fido2.service.verifier.AuthenticatorDataVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.fido2.service.verifier.UserVerificationVerifier;
+import org.gluu.persist.model.fido2.Fido2AuthenticationData;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.slf4j.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.security.PublicKey;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Class which processes assertions of "tpm" fmt (attestation type)

@@ -7,7 +7,9 @@
 package org.gluu.fido2.service.shared;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+import org.gluu.fido2.model.conf.AppConfiguration;
 import org.gluu.model.ApplicationType;
 
 /**
@@ -15,7 +17,7 @@ import org.gluu.model.ApplicationType;
  *
  */
 @ApplicationScoped
-public class OrganizationService extends io.jans.as.common.service.OrganizationService {
+public class OrganizationService extends org.gluu.service.OrganizationService {
 
 	@Inject
 	private AppConfiguration appConfiguration;

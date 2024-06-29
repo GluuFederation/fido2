@@ -7,17 +7,18 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
+import org.gluu.fido2.service.Base64Service;
+import org.gluu.oxauth.model.fido.u2f.exception.BadInputException;
+import org.gluu.oxauth.model.fido.u2f.message.RawRegisterResponse;
+import org.gluu.oxauth.model.util.Base64Util;
+import org.gluu.util.io.ByteDataInputStream;
+import org.gluu.util.security.SecurityProviderUtility;
 import org.slf4j.Logger;
 
-import io.jans.as.model.fido.u2f.exception.BadInputException;
-import io.jans.as.model.fido.u2f.message.RawRegisterResponse;
-import io.jans.as.model.util.Base64Util;
-import io.jans.fido2.service.Base64Service;
-import io.jans.util.io.ByteDataInputStream;
-import io.jans.util.security.SecurityProviderUtility;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 /**
  * Provides operations with U2F RAW registration response
  *
@@ -67,5 +68,4 @@ public class RawRegistrationService {
     }
 
 
-}
 }

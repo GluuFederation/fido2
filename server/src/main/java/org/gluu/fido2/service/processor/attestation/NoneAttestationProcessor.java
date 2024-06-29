@@ -13,17 +13,19 @@
 
 package org.gluu.fido2.service.processor.attestation;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.jans.fido2.ctap.AttestationFormat;
-import io.jans.fido2.exception.Fido2RuntimeException;
-import io.jans.fido2.model.auth.AuthData;
-import io.jans.fido2.model.auth.CredAndCounterData;
-import io.jans.fido2.service.Base64Service;
-import io.jans.fido2.service.processors.AttestationFormatProcessor;
-import io.jans.orm.model.fido2.Fido2RegistrationData;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.gluu.fido2.ctap.AttestationFormat;
+import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.auth.AuthData;
+import org.gluu.fido2.model.auth.CredAndCounterData;
+import org.gluu.fido2.service.Base64Service;
+import org.gluu.fido2.service.processors.AttestationFormatProcessor;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.slf4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Attestation processor for attestations of fmt = none One of the attestation

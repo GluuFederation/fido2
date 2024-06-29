@@ -1,27 +1,29 @@
 package org.gluu.fido2.service.processor.assertion;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.jans.fido2.ctap.AttestationFormat;
-import io.jans.fido2.exception.Fido2CompromisedDevice;
-import io.jans.fido2.exception.Fido2RuntimeException;
-import io.jans.fido2.model.auth.AuthData;
-import io.jans.fido2.service.AuthenticatorDataParser;
-import io.jans.fido2.service.Base64Service;
-import io.jans.fido2.service.CoseService;
-import io.jans.fido2.service.DataMapperService;
-import io.jans.fido2.service.processors.AssertionFormatProcessor;
-import io.jans.fido2.service.verifier.AuthenticatorDataVerifier;
-import io.jans.fido2.service.verifier.CommonVerifiers;
-import io.jans.fido2.service.verifier.UserVerificationVerifier;
-import io.jans.orm.model.fido2.Fido2AuthenticationData;
-import io.jans.orm.model.fido2.Fido2RegistrationData;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import java.security.PublicKey;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.gluu.fido2.ctap.AttestationFormat;
+import org.gluu.fido2.exception.Fido2CompromisedDevice;
+import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.auth.AuthData;
+import org.gluu.fido2.service.AuthenticatorDataParser;
+import org.gluu.fido2.service.Base64Service;
+import org.gluu.fido2.service.CoseService;
+import org.gluu.fido2.service.DataMapperService;
+import org.gluu.fido2.service.processors.AssertionFormatProcessor;
+import org.gluu.fido2.service.verifier.AuthenticatorDataVerifier;
+import org.gluu.fido2.service.verifier.CommonVerifiers;
+import org.gluu.fido2.service.verifier.UserVerificationVerifier;
+import org.gluu.persist.model.fido2.Fido2AuthenticationData;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.slf4j.Logger;
 
-import java.security.PublicKey;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Class which processes assertions of "none" fmt (attestation type)

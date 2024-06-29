@@ -21,15 +21,15 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
+import org.gluu.util.security.SecurityProviderUtility;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.WeldJunit5AutoExtension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import org.gluu.util.security.SecurityProviderUtility;
-import jakarta.inject.Inject;
 
 /**
  * @author Yuriy Movchan

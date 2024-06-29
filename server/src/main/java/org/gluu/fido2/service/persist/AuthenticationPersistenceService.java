@@ -6,7 +6,6 @@
 
 package org.gluu.fido2.service.persist;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -16,19 +15,18 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.gluu.fido2.entry.Fido2AuthenticationData;
-import org.gluu.fido2.entry.Fido2AuthenticationEntry;
-import org.gluu.fido2.entry.Fido2AuthenticationStatus;
-import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.apache.commons.lang3.StringUtils;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
 import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
+import org.gluu.fido2.service.ChallengeGenerator;
 import org.gluu.fido2.service.shared.UserService;
 import org.gluu.oxauth.model.common.User;
 import org.gluu.oxauth.model.config.StaticConfiguration;
 import org.gluu.persist.PersistenceEntryManager;
-import org.gluu.persist.model.BatchOperation;
-import org.gluu.persist.model.ProcessBatchOperation;
-import org.gluu.persist.model.SearchScope;
 import org.gluu.persist.model.base.SimpleBranch;
+import org.gluu.persist.model.fido2.Fido2AuthenticationData;
+import org.gluu.persist.model.fido2.Fido2AuthenticationEntry;
 import org.gluu.search.filter.Filter;
 import org.gluu.util.StringHelper;
 import org.slf4j.Logger;

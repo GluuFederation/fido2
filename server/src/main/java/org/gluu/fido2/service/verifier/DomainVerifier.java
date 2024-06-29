@@ -19,7 +19,8 @@ import java.net.URL;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.gluu.fido2.exception.Fido2RpRuntimeException;
+import org.gluu.fido2.model.error.CommonErrorResponseType;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;

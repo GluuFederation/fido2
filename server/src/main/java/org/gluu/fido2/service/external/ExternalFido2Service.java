@@ -1,6 +1,13 @@
 package org.gluu.fido2.service.external;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.ws.rs.WebApplicationException;
+
 import org.gluu.fido2.service.external.context.ExternalFido2Context;
+import org.gluu.model.custom.script.CustomScriptType;
+import org.gluu.model.custom.script.conf.CustomScriptConfiguration;
+import org.gluu.model.custom.script.type.fido2.Fido2ExtensionType;
+import org.gluu.service.custom.script.ExternalScriptService;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

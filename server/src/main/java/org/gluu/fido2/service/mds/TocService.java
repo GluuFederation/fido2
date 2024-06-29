@@ -31,13 +31,15 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.exception.mds.MdsClientException;
 import org.gluu.fido2.model.conf.AppConfiguration;
 import org.gluu.fido2.model.conf.Fido2Configuration;
+import org.gluu.fido2.model.mds.MdsGetEndpointResponse;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CertificateService;
 import org.gluu.fido2.service.DataMapperService;
-import org.gluu.fido2.service.client.ResteasyClientFactory;
 import org.gluu.fido2.service.verifier.CertificateVerifier;
 import org.gluu.service.cdi.event.ApplicationInitialized;
 import org.gluu.util.Pair;
@@ -45,7 +47,6 @@ import org.gluu.util.StringHelper;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSObject;

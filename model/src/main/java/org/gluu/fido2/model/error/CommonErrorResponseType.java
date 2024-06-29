@@ -1,6 +1,6 @@
 package org.gluu.fido2.model.error;
 
-import io.jans.as.model.error.IErrorType;
+import org.gluu.oxauth.model.error.IErrorType;
 
 public enum CommonErrorResponseType implements IErrorType {
 

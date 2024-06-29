@@ -1,13 +1,9 @@
 package org.gluu.fido2.service.sg;
 
-import org.gluu.as.model.fido.u2f.exception.BadInputException;
-import org.gluu.as.model.fido.u2f.message.RawRegisterResponse;
-import org.gluu.util.security.SecurityProviderUtility;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.gluu.fido2.service.sg.RawRegistrationService.REGISTRATION_RESERVED_BYTE_VALUE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -15,8 +11,14 @@ import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
-import static org.gluu.fido2.service.sg.RawRegistrationService.REGISTRATION_RESERVED_BYTE_VALUE;
-import static org.junit.jupiter.api.Assertions.*;
+import org.gluu.oxauth.model.fido.u2f.exception.BadInputException;
+import org.gluu.oxauth.model.fido.u2f.message.RawRegisterResponse;
+import org.gluu.util.security.SecurityProviderUtility;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class RawRegistrationServiceTest {

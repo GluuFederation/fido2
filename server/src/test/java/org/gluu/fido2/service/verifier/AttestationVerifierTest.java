@@ -1,7 +1,21 @@
 package org.gluu.fido2.service.verifier;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
 import org.gluu.fido2.model.error.ErrorResponseFactory;
@@ -10,9 +24,7 @@ import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.processor.attestation.AttestationProcessorFactory;
 import org.gluu.fido2.service.processors.AttestationFormatProcessor;
-import org.gluu.orm.model.fido2.Fido2RegistrationData;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,10 +32,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @ExtendWith(MockitoExtension.class)
 class AttestationVerifierTest {

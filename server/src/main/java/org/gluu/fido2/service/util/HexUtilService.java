@@ -1,6 +1,7 @@
 package org.gluu.fido2.service.util;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.ApplicationScoped;
+
 import org.apache.commons.codec.binary.Hex;
 
 @ApplicationScoped

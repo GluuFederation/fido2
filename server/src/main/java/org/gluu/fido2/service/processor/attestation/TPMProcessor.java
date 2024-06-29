@@ -32,10 +32,11 @@ import javax.inject.Inject;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.gluu.fido2.ctap.AttestationFormat;
-import org.gluu.fido2.entry.Fido2RegistrationData;
-import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
+import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CertificateService;
 import org.gluu.fido2.service.DataMapperService;
@@ -44,6 +45,7 @@ import org.gluu.fido2.service.processors.AttestationFormatProcessor;
 import org.gluu.fido2.service.verifier.CertificateVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.fido2.service.verifier.SignatureVerifier;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -52,7 +54,6 @@ import tss.tpm.TPMS_ATTEST;
 import tss.tpm.TPMS_CERTIFY_INFO;
 import tss.tpm.TPMT_PUBLIC;
 import tss.tpm.TPM_GENERATED;
-
 /**
  * Attestation processor for attestations of fmt = tpm
  *

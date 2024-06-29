@@ -6,33 +6,42 @@
 
 package org.gluu.fido2.service.operation;
 
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Context;
 
 import org.gluu.fido2.ctap.AttestationConveyancePreference;
 import org.gluu.fido2.ctap.AuthenticatorAttachment;
 import org.gluu.fido2.ctap.CoseEC2Algorithm;
 import org.gluu.fido2.ctap.CoseRSAAlgorithm;
-import org.gluu.fido2.entry.Fido2RegistrationData;
-import org.gluu.fido2.entry.Fido2RegistrationEntry;
-import org.gluu.fido2.entry.Fido2RegistrationStatus;
-import org.gluu.fido2.entry.UserVerification;
-import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
 import org.gluu.fido2.model.auth.CredAndCounterData;
 import org.gluu.fido2.model.auth.PublicKeyCredentialDescriptor;
 import org.gluu.fido2.model.conf.AppConfiguration;
 import org.gluu.fido2.model.conf.RequestedParty;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.ChallengeGenerator;
 import org.gluu.fido2.service.DataMapperService;
+import org.gluu.fido2.service.external.ExternalFido2Service;
+import org.gluu.fido2.service.external.context.ExternalFido2Context;
 import org.gluu.fido2.service.persist.RegistrationPersistenceService;
+import org.gluu.fido2.service.persist.UserSessionIdService;
 import org.gluu.fido2.service.verifier.AttestationVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.fido2.service.verifier.DomainVerifier;
+import org.gluu.persist.model.fido2.Fido2DeviceData;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
+import org.gluu.persist.model.fido2.Fido2RegistrationEntry;
+import org.gluu.persist.model.fido2.Fido2RegistrationStatus;
+import org.gluu.persist.model.fido2.UserVerification;
 import org.gluu.util.StringHelper;
 import org.slf4j.Logger;
 
@@ -481,4 +490,4 @@ public class AttestationService {
 
 		return excludedCredentials;
 	}
-
+}

@@ -14,14 +14,13 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
+import org.gluu.util.StringHelper;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.gluu.util.StringHelper;
 
 /**
  * @author Yuriy Movchan

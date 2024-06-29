@@ -1,8 +1,33 @@
 package org.gluu.fido2.service.verifier;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.*;
+import static org.gluu.fido2.service.verifier.CommonVerifiers.SUPER_GLUU_APP_ID;
+import static org.gluu.fido2.service.verifier.CommonVerifiers.SUPER_GLUU_KEY_HANDLE;
+import static org.gluu.fido2.service.verifier.CommonVerifiers.SUPER_GLUU_MODE;
+import static org.gluu.fido2.service.verifier.CommonVerifiers.SUPER_GLUU_REQUEST;
+import static org.gluu.fido2.service.verifier.CommonVerifiers.SUPER_GLUU_REQUEST_CANCEL;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.stream.Stream;
+
+import javax.enterprise.inject.Instance;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
+import org.bouncycastle.util.encoders.Hex;
 import org.gluu.fido2.ctap.AttestationConveyancePreference;
 import org.gluu.fido2.ctap.AuthenticatorAttachment;
 import org.gluu.fido2.ctap.TokenBindingSupport;
@@ -16,12 +41,8 @@ import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.processor.attestation.AppleAttestationProcessor;
 import org.gluu.fido2.service.processor.attestation.TPMProcessor;
 import org.gluu.fido2.service.processors.AttestationFormatProcessor;
-import org.gluu.orm.model.fido2.UserVerification;
+import org.gluu.persist.model.fido2.UserVerification;
 import org.gluu.service.net.NetworkService;
-import jakarta.enterprise.inject.Instance;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,13 +50,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.util.stream.Stream;
-
-import static org.gluu.fido2.service.verifier.CommonVerifiers.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.BinaryNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 @ExtendWith(MockitoExtension.class)
 class CommonVerifiersTest {

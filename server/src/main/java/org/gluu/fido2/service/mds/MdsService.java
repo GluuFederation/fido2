@@ -20,24 +20,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+
 import org.apache.commons.codec.binary.Hex;
+import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.conf.Fido2Configuration;
+import org.gluu.fido2.model.mds.AuthenticatorCertificationStatus;
+import org.gluu.fido2.service.Base64Service;
+import org.gluu.fido2.service.DataMapperService;
+import org.gluu.fido2.service.verifier.CommonVerifiers;
+import org.gluu.service.cdi.event.ApplicationInitialized;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
-
-import io.jans.fido2.exception.Fido2RuntimeException;
-import io.jans.fido2.model.conf.AppConfiguration;
-import io.jans.fido2.model.conf.Fido2Configuration;
-import io.jans.fido2.model.mds.AuthenticatorCertificationStatus;
-import io.jans.fido2.service.Base64Service;
-import io.jans.fido2.service.DataMapperService;
-import io.jans.fido2.service.client.ResteasyClientFactory;
-import io.jans.fido2.service.verifier.CommonVerifiers;
-import io.jans.service.cdi.event.ApplicationInitialized;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class MdsService {

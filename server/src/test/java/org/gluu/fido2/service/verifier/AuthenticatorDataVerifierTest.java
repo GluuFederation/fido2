@@ -1,7 +1,17 @@
 package org.gluu.fido2.service.verifier;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.DataMapperService;
@@ -12,11 +22,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.security.PublicKey;
-import java.security.cert.Certificate;
-
-import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticatorDataVerifierTest {

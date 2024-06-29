@@ -14,9 +14,9 @@
 package org.gluu.fido2.service.processors;
 
 import org.gluu.fido2.ctap.AttestationFormat;
-import org.gluu.fido2.entry.Fido2RegistrationData;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

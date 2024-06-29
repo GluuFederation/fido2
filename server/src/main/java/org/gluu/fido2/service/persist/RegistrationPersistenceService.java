@@ -6,7 +6,7 @@
 
 package org.gluu.fido2.service.persist;
 
-import java.util.Calendar;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -19,19 +19,16 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
-import org.gluu.fido2.entry.Fido2RegistrationData;
-import org.gluu.fido2.entry.Fido2RegistrationEntry;
-import org.gluu.fido2.entry.Fido2RegistrationStatus;
-import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
 import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.shared.UserService;
 import org.gluu.oxauth.model.common.User;
 import org.gluu.oxauth.model.config.StaticConfiguration;
 import org.gluu.persist.PersistenceEntryManager;
-import org.gluu.persist.model.BatchOperation;
-import org.gluu.persist.model.ProcessBatchOperation;
-import org.gluu.persist.model.SearchScope;
-import org.gluu.persist.model.base.SimpleBranch;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
+import org.gluu.persist.model.fido2.Fido2RegistrationEntry;
+import org.gluu.persist.model.fido2.Fido2RegistrationStatus;
 import org.gluu.search.filter.Filter;
 import org.gluu.util.StringHelper;
 import org.slf4j.Logger;
@@ -42,7 +39,7 @@ import org.slf4j.Logger;
  * @version May 08, 2020
  */
 @ApplicationScoped
-public class RegistrationPersistenceService {
+public class RegistrationPersistenceService extends org.gluu.oxauth.service.common.fido2.RegistrationPersistenceService {
 
     @Inject
     private Logger log;

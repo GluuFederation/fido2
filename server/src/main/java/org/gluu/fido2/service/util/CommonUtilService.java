@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import javax.enterprise.context.ApplicationScoped;
+
 @ApplicationScoped
 public class CommonUtilService {
 

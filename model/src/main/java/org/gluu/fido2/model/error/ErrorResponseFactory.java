@@ -1,30 +1,35 @@
 package org.gluu.fido2.model.error;
 
-import io.jans.as.model.config.Constants;
-import io.jans.as.model.configuration.Configuration;
-import io.jans.as.model.error.DefaultErrorResponse;
-import io.jans.as.model.error.IErrorType;
-import io.jans.fido2.model.assertion.AssertionErrorResponseType;
-import io.jans.fido2.model.attestation.AttestationErrorResponseType;
-import io.jans.fido2.model.conf.AppConfiguration;
-import io.jans.model.error.ErrorMessage;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import org.apache.commons.lang.BooleanUtils;
-import org.apache.logging.log4j.ThreadContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static jakarta.ws.rs.core.Response.Status.*;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.logging.log4j.ThreadContext;
+import org.gluu.fido2.model.assertion.AssertionErrorResponseType;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
+import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.model.error.ErrorMessage;
+import org.gluu.oxauth.model.configuration.Configuration;
+import org.gluu.oxauth.model.error.DefaultErrorResponse;
+import org.gluu.oxauth.model.error.IErrorType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ErrorResponseFactory implements Configuration {
 
     private static final Logger log = LoggerFactory.getLogger(ErrorResponseFactory.class);
+
+    public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
 
     private Fido2ErrorMessages messages;
 
@@ -109,7 +114,7 @@ public class ErrorResponseFactory implements Configuration {
             }
             if (list != null) {
                 final ErrorMessage m = getError(list, type);
-                String description = Optional.ofNullable(ThreadContext.get(Constants.CORRELATION_ID_HEADER))
+                String description = Optional.ofNullable(ThreadContext.get(CORRELATION_ID_HEADER))
                         .map(id -> m.getDescription().concat(" CorrelationId: " + id))
                         .orElse(m.getDescription());
                 response.setErrorDescription(description);

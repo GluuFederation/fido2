@@ -1,7 +1,14 @@
 package org.gluu.fido2.service.app;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
+
+import org.gluu.fido2.ws.rs.controller.AssertionController;
+import org.gluu.fido2.ws.rs.controller.AttestationController;
+import org.gluu.fido2.ws.rs.controller.ConfigurationController;
 
 /**
  * Integration with Resteasy

@@ -1,5 +1,34 @@
 package org.gluu.fido2.service.processor.attestation;
 
+import java.nio.charset.Charset;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.gluu.fido2.ctap.AttestationFormat;
+import org.gluu.fido2.model.auth.AuthData;
+import org.gluu.fido2.model.auth.CredAndCounterData;
+import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.service.Base64Service;
+import org.gluu.fido2.service.CertificateService;
+import org.gluu.fido2.service.CoseService;
+import org.gluu.fido2.service.mds.AttestationCertificateService;
+import org.gluu.fido2.service.processors.AttestationFormatProcessor;
+import org.gluu.fido2.service.verifier.AuthenticatorDataVerifier;
+import org.gluu.fido2.service.verifier.CertificateVerifier;
+import org.gluu.fido2.service.verifier.CommonVerifiers;
+import org.gluu.fido2.service.verifier.UserVerificationVerifier;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
+import org.slf4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * Attestation processor for attestations of fmt =fido-u2f
  *

@@ -1,17 +1,18 @@
 package org.gluu.fido2.service.util;
 
-import io.jans.fido2.model.attestation.AttestationErrorResponseType;
-import io.jans.fido2.model.error.ErrorResponseFactory;
-import jakarta.enterprise.context.ApplicationScoped;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.security.cert.X509Certificate;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.apache.kerby.asn1.parse.Asn1Container;
 import org.apache.kerby.asn1.parse.Asn1ParseResult;
 import org.apache.kerby.asn1.parse.Asn1Parser;
 import org.apache.kerby.asn1.type.Asn1OctetString;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.security.cert.X509Certificate;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 
 @ApplicationScoped
 public class AppleUtilService {

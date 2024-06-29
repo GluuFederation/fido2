@@ -4,30 +4,30 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-import io.jans.fido2.model.assertion.AssertionErrorResponseType;
-import io.jans.fido2.model.error.ErrorResponseFactory;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.ArrayUtils;
+import org.gluu.fido2.model.assertion.AssertionErrorResponseType;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
+import org.gluu.fido2.service.AuthenticatorDataParser;
+import org.gluu.fido2.service.Base64Service;
+import org.gluu.fido2.service.DataMapperService;
+import org.gluu.fido2.service.DigestService;
+import org.gluu.fido2.service.operation.AssertionService;
+import org.gluu.fido2.service.persist.UserSessionIdService;
+import org.gluu.fido2.service.sg.RawAuthenticationService;
+import org.gluu.fido2.service.verifier.CommonVerifiers;
+import org.gluu.fido2.sg.SuperGluuMode;
+import org.gluu.oxauth.model.fido.u2f.message.RawAuthenticateResponse;
+import org.gluu.oxauth.model.fido.u2f.protocol.AuthenticateResponse;
+import org.gluu.oxauth.model.fido.u2f.protocol.ClientData;
+import org.gluu.util.StringHelper;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.jans.as.model.fido.u2f.message.RawAuthenticateResponse;
-import io.jans.as.model.fido.u2f.protocol.AuthenticateResponse;
-import io.jans.as.model.fido.u2f.protocol.ClientData;
-import io.jans.fido2.service.AuthenticatorDataParser;
-import io.jans.fido2.service.Base64Service;
-import io.jans.fido2.service.DataMapperService;
-import io.jans.fido2.service.DigestService;
-import io.jans.fido2.service.operation.AssertionService;
-import io.jans.fido2.service.persist.UserSessionIdService;
-import io.jans.fido2.service.sg.RawAuthenticationService;
-import io.jans.fido2.service.verifier.CommonVerifiers;
-import io.jans.fido2.sg.SuperGluuMode;
-import io.jans.util.StringHelper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * Converters Super Gluu authentication request to U2F V2 request
