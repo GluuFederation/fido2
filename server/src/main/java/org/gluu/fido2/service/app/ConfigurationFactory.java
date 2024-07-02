@@ -80,7 +80,7 @@ public class ConfigurationFactory {
 	private final static int DEFAULT_INTERVAL = 30; // 30 seconds
 
 	static {
-		if (System.getProperty("jans.base") != null) {
+		if (System.getProperty("gluu.base") != null) {
 			BASE_DIR = System.getProperty("jans.base");
 		} else if ((System.getProperty("catalina.base") != null) && (System.getProperty("catalina.base.ignore") == null)) {
 			BASE_DIR = System.getProperty("catalina.base");
@@ -96,7 +96,7 @@ public class ConfigurationFactory {
 	private static final String BASE_DIR;
 	private static final String DIR = BASE_DIR + File.separator + "conf" + File.separator;
 
-	private static final String BASE_PROPERTIES_FILE = DIR + "jans.properties";
+	private static final String BASE_PROPERTIES_FILE = DIR + "gluu.properties";
 	private static final String APP_PROPERTIES_FILE = DIR + "fido2.properties";
 
 	private final String SALT_FILE_NAME = "salt";
