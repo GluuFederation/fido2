@@ -91,7 +91,7 @@ public class DeviceRegistrationService {
 			}
 		}
 
-		Filter resultFilter = Filter.createEqualityFilter("jansStatus", DeviceRegistrationStatus.ACTIVE.getValue());
+		Filter resultFilter = Filter.createEqualityFilter("oxStatus", DeviceRegistrationStatus.ACTIVE.getValue());
 
 		List<DeviceRegistration> fidoRegistrations = persistenceEntryManager.findEntries(baseDn, DeviceRegistration.class, resultFilter,
 				returnAttributes);
@@ -186,7 +186,7 @@ public class DeviceRegistrationService {
 		if (StringHelper.isEmpty(jsId)) {
 			return baseDnForU2fDevices;
 		}
-		return String.format("jansId=%s,%s", jsId, baseDnForU2fDevices);
+		return String.format("oxId=%s,%s", jsId, baseDnForU2fDevices);
 	}
 
 	public String getBaseDnForU2fUserDevices(String userInum) {

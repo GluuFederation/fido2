@@ -172,7 +172,7 @@ public class UserSessionIdService {
     }
 
     private String buildDn(String sessionId) {
-        return String.format("jansId=%s,%s", sessionId, staticConfiguration.getBaseDn().getSessions());
+        return String.format("oxId=%s,%s", sessionId, staticConfiguration.getBaseDn().getSessions());
     }
 
 }

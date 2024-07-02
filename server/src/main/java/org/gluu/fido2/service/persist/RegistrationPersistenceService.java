@@ -110,10 +110,10 @@ public class RegistrationPersistenceService extends org.gluu.oxauth.service.comm
     	}
 
         Filter filter;
-        Filter publicKeyIdFilter = Filter.createEqualityFilter("jansPublicKeyId", publicKeyId);
-        Filter publicKeyIdHashFilter = Filter.createEqualityFilter("jansPublicKeyIdHash", getPublicKeyIdHash(publicKeyId));
+        Filter publicKeyIdFilter = Filter.createEqualityFilter("oxPublicKeyId", publicKeyId);
+        Filter publicKeyIdHashFilter = Filter.createEqualityFilter("oxPublicKeyIdHash", getPublicKeyIdHash(publicKeyId));
         if (StringHelper.isNotEmpty(rpId)) {
-        	Filter appIdFilter = Filter.createEqualityFilter("jansApp", rpId);
+        	Filter appIdFilter = Filter.createEqualityFilter("oxApplication", rpId);
             filter = Filter.createANDFilter(publicKeyIdFilter, publicKeyIdHashFilter, appIdFilter);
         } else {
             filter = Filter.createANDFilter(publicKeyIdFilter, publicKeyIdHashFilter);
@@ -165,7 +165,7 @@ public class RegistrationPersistenceService extends org.gluu.oxauth.service.comm
         }
 
         Filter userInumFilter = Filter.createEqualityFilter("personInum", userInum);
-        Filter registeredFilter = Filter.createEqualityFilter("jansStatus", Fido2RegistrationStatus.registered.getValue());
+        Filter registeredFilter = Filter.createEqualityFilter("oxStatus", Fido2RegistrationStatus.registered.getValue());
         Filter filter = Filter.createANDFilter(userInumFilter, registeredFilter);
 
         List<Fido2RegistrationEntry> fido2RegistrationnEntries = persistenceEntryManager.findEntries(baseDn, Fido2RegistrationEntry.class, filter);
@@ -176,8 +176,8 @@ public class RegistrationPersistenceService extends org.gluu.oxauth.service.comm
     public List<Fido2RegistrationEntry> findByChallenge(String challenge, boolean oneStep) {
         String baseDn = oneStep ? getDnForRegistrationEntry(null, null) : getBaseDnForFido2RegistrationEntries(null);
 
-        Filter codeChallengFilter = Filter.createEqualityFilter("jansCodeChallenge", challenge);
-        Filter codeChallengHashCodeFilter = Filter.createEqualityFilter("jansCodeChallengeHash", getChallengeHashCode(challenge));
+        Filter codeChallengFilter = Filter.createEqualityFilter("oxCodeChallenge", challenge);
+        Filter codeChallengHashCodeFilter = Filter.createEqualityFilter("oxCodeChallengeHash", getChallengeHashCode(challenge));
         Filter filter = Filter.createANDFilter(codeChallengFilter, codeChallengHashCodeFilter);
 
         List<Fido2RegistrationEntry> fido2RegistrationnEntries = persistenceEntryManager.findEntries(baseDn, Fido2RegistrationEntry.class, filter);
@@ -226,7 +226,7 @@ public class RegistrationPersistenceService extends org.gluu.oxauth.service.comm
         if (StringHelper.isEmpty(jsId)) {
             return baseDn;
         }
-        return String.format("jansId=%s,%s", jsId, baseDn);
+        return String.format("oxId=%s,%s", jsId, baseDn);
     }
 
     public String getUserInum(String userName)

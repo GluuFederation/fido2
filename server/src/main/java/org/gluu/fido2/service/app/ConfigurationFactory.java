@@ -210,7 +210,7 @@ public class ConfigurationFactory {
 	}
 
 	private boolean isRevisionIncreased() {
-        final Conf conf = loadConfigurationFromLdap("jansRevision");
+        final Conf conf = loadConfigurationFromLdap("oxRevision");
         if (conf == null) {
             return false;
         }

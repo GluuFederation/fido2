@@ -146,8 +146,8 @@ public class AuthenticationPersistenceService {
     public List<Fido2AuthenticationEntry> findByChallenge(String challenge, boolean oneStep) {
         String baseDn = oneStep ? getDnForAuthenticationEntry(null, null) : getBaseDnForFido2AuthenticationEntries(null);
 
-        Filter codeChallengFilter = Filter.createEqualityFilter("jansCodeChallenge", challenge);
-        Filter codeChallengHashCodeFilter = Filter.createEqualityFilter("jansCodeChallengeHash", challengeGenerator.getChallengeHashCode(challenge));
+        Filter codeChallengFilter = Filter.createEqualityFilter("oxCodeChallenge", challenge);
+        Filter codeChallengHashCodeFilter = Filter.createEqualityFilter("oxCodeChallengeHash", challengeGenerator.getChallengeHashCode(challenge));
         Filter filter = Filter.createANDFilter(codeChallengFilter, codeChallengHashCodeFilter);
 
         List<Fido2AuthenticationEntry> fido2AuthenticationEntries = persistenceEntryManager.findEntries(baseDn, Fido2AuthenticationEntry.class, filter);
@@ -167,11 +167,11 @@ public class AuthenticationPersistenceService {
         if (StringHelper.isEmpty(jsId)) {
             return baseDn;
         }
-        return String.format("jansId=%s,%s", jsId, baseDn);
+        return String.format("oxId=%s,%s", jsId, baseDn);
     }
 
     public String getBaseDnForFido2AuthenticationEntries(String userInum) {
-        final String userBaseDn = getDnForUser(userInum); // "ou=fido2_auth,inum=1234,ou=people,o=jans"
+        final String userBaseDn = getDnForUser(userInum); // "ou=fido2_auth,inum=1234,ou=people,o=gluu"
         if (StringHelper.isEmpty(userInum)) {
             return userBaseDn;
         }

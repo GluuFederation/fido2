@@ -106,7 +106,7 @@ class FetchMdsProviderServiceTest {
     void fetchMetadataBlob_withValidMdsUrl_valid() throws ParseException {
         MdsGetEndpointResponse responseGetEndpoint = ResteasyClientBuilder.newBuilder().build()
                 .target("https://mds3.fido.tools/getEndpoints").request()
-                .post(Entity.entity(Collections.singletonMap("endpoint", "https://jans.fido.org"), MediaType.APPLICATION_JSON_TYPE))
+                .post(Entity.entity(Collections.singletonMap("endpoint", "https://gluu.fido.org"), MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(MdsGetEndpointResponse.class);
         assertNotNull(responseGetEndpoint);
         assertFalse(responseGetEndpoint.getResult().isEmpty());

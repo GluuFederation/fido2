@@ -68,7 +68,7 @@ class ConfigurationControllerTest {
         when(appConfiguration.getFido2Configuration()).thenReturn(fido2Configuration);
         when(fido2Configuration.isAssertionOptionsGenerateEndpointEnabled()).thenReturn(true);
         when(dataMapperService.createObjectNode()).thenReturn(mapper.createObjectNode(), mapper.createObjectNode(), mapper.createObjectNode());
-        String issuer = "https://jans-test.org";
+        String issuer = "https://gluu-test.org";
         String baseEndpoint = issuer + "/fido";
         when(appConfiguration.getIssuer()).thenReturn(issuer);
         when(appConfiguration.getBaseEndpoint()).thenReturn(baseEndpoint);
@@ -93,7 +93,7 @@ class ConfigurationControllerTest {
         when(fido2Configuration.isAssertionOptionsGenerateEndpointEnabled()).thenReturn(true);
         when(appConfiguration.isSuperGluuEnabled()).thenReturn(true);
         when(dataMapperService.createObjectNode()).thenReturn(mapper.createObjectNode(), mapper.createObjectNode(), mapper.createObjectNode());
-        String issuer = "https://jans-test.org";
+        String issuer = "https://gluu-test.org";
         String baseEndpoint = issuer + "/fido";
         when(appConfiguration.getIssuer()).thenReturn(issuer);
         when(appConfiguration.getBaseEndpoint()).thenReturn(baseEndpoint);
@@ -119,7 +119,7 @@ class ConfigurationControllerTest {
         when(fido2Configuration.isAssertionOptionsGenerateEndpointEnabled()).thenReturn(false);
         when(appConfiguration.isSuperGluuEnabled()).thenReturn(false);
         when(dataMapperService.createObjectNode()).thenReturn(mapper.createObjectNode(), mapper.createObjectNode(), mapper.createObjectNode());
-        String issuer = "https://jans-test.org";
+        String issuer = "https://gluu-test.org";
         String baseEndpoint = issuer + "/fido";
         when(appConfiguration.getIssuer()).thenReturn(issuer);
         when(appConfiguration.getBaseEndpoint()).thenReturn(baseEndpoint);
