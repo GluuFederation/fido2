@@ -25,20 +25,26 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.gluu.fido2.ctap.AttestationFormat;
-import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.google.safetynet.AttestationStatement;
 import org.gluu.fido2.google.safetynet.OfflineVerify;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
+import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.mds.AttestationCertificateService;
 import org.gluu.fido2.service.processors.AttestationFormatProcessor;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * Attestation processor for attestations of fmt = android-safetynet
+ *
+ */
 @ApplicationScoped
 public class AndroidSafetyNetAttestationProcessor implements AttestationFormatProcessor {
 
@@ -54,6 +60,15 @@ public class AndroidSafetyNetAttestationProcessor implements AttestationFormatPr
     @Inject
     private Base64Service base64Service;
 
+    @Inject
+    private AppConfiguration appConfiguration;
+
+    @Inject
+    private ErrorResponseFactory errorResponseFactory;
+
+    @Inject
+    private OfflineVerify offlineVerify;
+
     @Override
     public AttestationFormat getAttestationFormat() {
         return AttestationFormat.android_safetynet;
@@ -61,48 +76,43 @@ public class AndroidSafetyNetAttestationProcessor implements AttestationFormatPr
 
     @Override
     public void process(JsonNode attStmt, AuthData authData, Fido2RegistrationData credential, byte[] clientDataHash,
-            CredAndCounterData credIdAndCounters) {
+                        CredAndCounterData credIdAndCounters) {
 
         commonVerifiers.verifyThatNonEmptyString(attStmt, "ver");
         String response = attStmt.get("response").asText();
         String aaguid = Hex.encodeHexString(authData.getAaguid());
         log.debug("Android safetynet payload {} {}", aaguid, new String(base64Service.decode(response)));
 
-        X509TrustManager tm = attestationCertificateService.populateTrustManager(authData, null);
-        AttestationStatement stmt;
-        try {
-            stmt = OfflineVerify.parseAndVerify(new String(base64Service.decode(response)), tm);
-        } catch (Exception e) {
-            throw new Fido2RuntimeException("Invalid safety net attestation " + e.getMessage());
+        if (appConfiguration.getFido2Configuration().isSkipValidateMdsInAttestationEnabled()) {
+            log.warn("SkipValidateMdsInAttestation is enabled");
+        } else {
+            X509TrustManager tm = attestationCertificateService.populateTrustManager(authData, null);
+            AttestationStatement stmt = offlineVerify.parseAndVerify(new String(base64Service.decode(response)), tm);
+            if (stmt == null) {
+                throw errorResponseFactory.badRequestException(AttestationErrorResponseType.ANDROID_SAFETYNET_ERROR, "Invalid safety net attestation, stmt is null");
+            }
+            byte[] b1 = authData.getAuthDataDecoded();
+            byte[] b2 = clientDataHash;
+            byte[] buffer = ByteBuffer.allocate(b1.length + b2.length).put(b1).put(b2).array();
+            byte[] hashedBuffer = DigestUtils.getSha256Digest().digest(buffer);
+            byte[] nonce = stmt.getNonce();
+            if (!Arrays.equals(hashedBuffer, nonce)) {
+                throw errorResponseFactory.badRequestException(AttestationErrorResponseType.ANDROID_SAFETYNET_ERROR, "Invalid safety net attestation, hashed and nonce are not equals");
+            }
+
+            if (!stmt.isCtsProfileMatch()) {
+                throw errorResponseFactory.badRequestException(AttestationErrorResponseType.ANDROID_SAFETYNET_ERROR, "Invalid safety net attestation, cts profile match is false");
+            }
+
+            Instant timestamp = Instant.ofEpochMilli(stmt.getTimestampMs());
+            if (timestamp.isAfter(Instant.now())) {
+                throw errorResponseFactory.badRequestException(AttestationErrorResponseType.ANDROID_SAFETYNET_ERROR, "Invalid safety net attestation, timestamp is after now");
+            }
+
+            if (timestamp.isBefore(Instant.now().minus(1, ChronoUnit.MINUTES))) {
+                throw errorResponseFactory.badRequestException(AttestationErrorResponseType.ANDROID_SAFETYNET_ERROR, "Invalid safety net attestation, timestamp is before now minus 1 minutes");
+            }
         }
-
-        if (stmt == null) {
-            throw new Fido2RuntimeException("Invalid safety net attestation");
-        }
-
-        byte[] b1 = authData.getAuthDataDecoded();
-        byte[] b2 = clientDataHash;
-        byte[] buffer = ByteBuffer.allocate(b1.length + b2.length).put(b1).put(b2).array();
-        byte[] hashedBuffer = DigestUtils.getSha256Digest().digest(buffer);
-        byte[] nonce = stmt.getNonce();
-        if (!Arrays.equals(hashedBuffer, nonce)) {
-            throw new Fido2RuntimeException("Invalid safety net attestation");
-        }
-
-        if (!stmt.isCtsProfileMatch()) {
-            throw new Fido2RuntimeException("Invalid safety net attestation");
-        }
-
-        Instant timestamp = Instant.ofEpochMilli(stmt.getTimestampMs());
-
-        if (timestamp.isAfter(Instant.now())) {
-            throw new Fido2RuntimeException("Invalid safety net attestation");
-        }
-
-        if (timestamp.isBefore(Instant.now().minus(1, ChronoUnit.MINUTES))) {
-            throw new Fido2RuntimeException("Invalid safety net attestation");
-        }
-
         credIdAndCounters.setAttestationType(getAttestationFormat().getFmt());
         credIdAndCounters.setCredId(base64Service.urlEncodeToString(authData.getCredId()));
         credIdAndCounters.setUncompressedEcPoint(base64Service.urlEncodeToString(authData.getCosePublicKey()));

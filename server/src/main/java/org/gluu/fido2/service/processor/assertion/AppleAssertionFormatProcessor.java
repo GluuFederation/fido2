@@ -18,26 +18,34 @@ import java.security.PublicKey;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.gluu.fido2.ctap.AttestationFormat;
 import org.gluu.fido2.exception.Fido2CompromisedDevice;
 import org.gluu.fido2.exception.Fido2RuntimeException;
 import org.gluu.fido2.model.auth.AuthData;
-import org.gluu.fido2.model.entry.Fido2AuthenticationData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
 import org.gluu.fido2.service.AuthenticatorDataParser;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CoseService;
 import org.gluu.fido2.service.DataMapperService;
 import org.gluu.fido2.service.processors.AssertionFormatProcessor;
+import org.gluu.fido2.service.util.DigestUtilService;
+import org.gluu.fido2.service.util.HexUtilService;
 import org.gluu.fido2.service.verifier.AuthenticatorDataVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
 import org.gluu.fido2.service.verifier.UserVerificationVerifier;
+import org.gluu.persist.model.fido2.Fido2AuthenticationData;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * Processor class for Assertions from Apple Platform authenticator - reference
+ * -
+ * https://medium.com/webauthnworks/webauthn-fido2-verifying-apple-anonymous-attestation-5eaff334c849
+ * 
+ * @author madhumitas
+ *
+ */
 @ApplicationScoped
 public class AppleAssertionFormatProcessor implements AssertionFormatProcessor {
 
@@ -65,33 +73,39 @@ public class AppleAssertionFormatProcessor implements AssertionFormatProcessor {
 	@Inject
 	private Base64Service base64Service;
 
+	@Inject
+	private DigestUtilService digestUtilService;
+
+	@Inject
+	private HexUtilService hexUtilService;
+
 	@Override
 	public AttestationFormat getAttestationFormat() {
 		return AttestationFormat.apple;
 	}
 
 	@Override
-	public void process(String base64AuthenticatorData, String signature, String clientDataJson, Fido2RegistrationData registration,
-			Fido2AuthenticationData authenticationEntity) {
+	public void process(String base64AuthenticatorData, String signature, String clientDataJson,
+			Fido2RegistrationData registration, Fido2AuthenticationData authenticationEntity) {
 		AuthData authData = authenticatorDataParser.parseAssertionData(base64AuthenticatorData);
 		commonVerifiers.verifyRpIdHash(authData, registration.getDomain());
 
 		log.info("User verification option {}", authenticationEntity.getUserVerificationOption());
-		userVerificationVerifier.verifyUserVerificationOption(authenticationEntity.getUserVerificationOption(), authData);
+		userVerificationVerifier.verifyUserVerificationOption(authenticationEntity.getUserVerificationOption(),
+				authData);
 
-		byte[] clientDataHash = DigestUtils.getSha256Digest().digest(base64Service.urlDecode(clientDataJson));
+		byte[] clientDataHash = digestUtilService.sha256Digest(base64Service.urlDecode(clientDataJson));
 
 		try {
 			int counter = authenticatorDataParser.parseCounter(authData.getCounters());
 			commonVerifiers.verifyCounter(registration.getCounter(), counter);
 			registration.setCounter(counter);
 
-			JsonNode uncompressedECPointNode = dataMapperService
-					.cborReadTree(base64Service.urlDecode(registration.getUncompressedECPoint()));
+			JsonNode uncompressedECPointNode = dataMapperService.cborReadTree(base64Service.urlDecode(registration.getUncompressedECPoint()));
 			PublicKey publicKey = coseService.createUncompressedPointFromCOSEPublicKey(uncompressedECPointNode);
 
-			log.info("Uncompressed ECpoint node {}", uncompressedECPointNode.toString());
-			log.info("EC Public key hex {}", Hex.encodeHexString(publicKey.getEncoded()));
+			log.info("Uncompressed ECpoint node {}", uncompressedECPointNode);
+			log.info("EC Public key hex {}", hexUtilService.encodeHexString(publicKey.getEncoded()));
 
 			log.info("Signature algorithm: " + registration.getSignatureAlgorithm());
 
@@ -103,7 +117,7 @@ public class AppleAssertionFormatProcessor implements AssertionFormatProcessor {
 		} catch (Fido2CompromisedDevice ex) {
 			throw ex;
 		} catch (Exception ex) {
-			throw new Fido2RuntimeException("Failed to check packet assertion", ex);
+			throw new Fido2RuntimeException("Failed to check apple assertion", ex);
 		}
 	}
 

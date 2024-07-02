@@ -26,10 +26,11 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.codec.binary.Hex;
 import org.gluu.fido2.ctap.AttestationFormat;
-import org.gluu.fido2.exception.Fido2RuntimeException;
+import org.gluu.fido2.model.attestation.AttestationErrorResponseType;
 import org.gluu.fido2.model.auth.AuthData;
 import org.gluu.fido2.model.auth.CredAndCounterData;
-import org.gluu.fido2.model.entry.Fido2RegistrationData;
+import org.gluu.fido2.model.conf.AppConfiguration;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.gluu.fido2.service.Base64Service;
 import org.gluu.fido2.service.CertificateService;
 import org.gluu.fido2.service.CoseService;
@@ -38,10 +39,15 @@ import org.gluu.fido2.service.processors.AttestationFormatProcessor;
 import org.gluu.fido2.service.verifier.AuthenticatorDataVerifier;
 import org.gluu.fido2.service.verifier.CertificateVerifier;
 import org.gluu.fido2.service.verifier.CommonVerifiers;
+import org.gluu.persist.model.fido2.Fido2RegistrationData;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * Attestation processor for attestations of fmt = packed
+ *
+ */
 @ApplicationScoped
 public class PackedAttestationProcessor implements AttestationFormatProcessor {
 
@@ -69,6 +75,12 @@ public class PackedAttestationProcessor implements AttestationFormatProcessor {
     @Inject
     private CertificateService certificateService;
 
+    @Inject
+    private AppConfiguration appConfiguration;
+
+    @Inject
+    private ErrorResponseFactory errorResponseFactory;
+
     @Override
     public AttestationFormat getAttestationFormat() {
         return AttestationFormat.packed;
@@ -80,28 +92,26 @@ public class PackedAttestationProcessor implements AttestationFormatProcessor {
         int alg = commonVerifiers.verifyAlgorithm(attStmt.get("alg"), authData.getKeyType());
         String signature = commonVerifiers.verifyBase64String(attStmt.get("sig"));
 
-
         if (attStmt.hasNonNull("x5c")) {
-            List<X509Certificate> attestationCertificates = getAttestationCertificates(attStmt);
-
-            X509TrustManager tm = attestationCertificateService.populateTrustManager(authData, attestationCertificates);
-            if ((tm == null) || (tm.getAcceptedIssuers().length == 0)) {
-                throw new Fido2RuntimeException(
-                        "Packed full attestation but no certificates in metadata for authenticator " + Hex.encodeHexString(authData.getAaguid()));
+            if (appConfiguration.getFido2Configuration().isSkipValidateMdsInAttestationEnabled()) {
+                log.warn("SkipValidateMdsInAttestation is enabled");
+            } else {
+                List<X509Certificate> attestationCertificates = getAttestationCertificates(attStmt);
+                X509TrustManager tm = attestationCertificateService.populateTrustManager(authData, attestationCertificates);
+                if ((tm == null) || (tm.getAcceptedIssuers().length == 0)) {
+                    throw errorResponseFactory.badRequestException(AttestationErrorResponseType.PACKED_ERROR, "Packed full attestation but no certificates in metadata for authenticator " + Hex.encodeHexString(authData.getAaguid()));
+                }
+                X509Certificate verifiedCert = certificateVerifier.verifyAttestationCertificates(attestationCertificates, Arrays.asList(tm.getAcceptedIssuers()));
+                authenticatorDataVerifier.verifyPackedAttestationSignature(authData.getAuthDataDecoded(), clientDataHash, signature, verifiedCert, alg);
+                if (certificateVerifier.isSelfSigned(verifiedCert)) {
+                    throw errorResponseFactory.badRequestException(AttestationErrorResponseType.PACKED_ERROR, "Self signed certificate");
+                }
             }
-
             credIdAndCounters.setSignatureAlgorithm(alg);
 
-            X509Certificate verifiedCert = certificateVerifier.verifyAttestationCertificates(attestationCertificates, Arrays.asList(tm.getAcceptedIssuers()));
-
-            authenticatorDataVerifier.verifyPackedAttestationSignature(authData.getAuthDataDecoded(), clientDataHash, signature, verifiedCert, alg);
-
-            if (certificateVerifier.isSelfSigned(verifiedCert)) {
-                throw new Fido2RuntimeException("Self signed certificate");
-            }
         } else if (attStmt.hasNonNull("ecdaaKeyId")) {
             String ecdaaKeyId = attStmt.get("ecdaaKeyId").asText();
-            throw new UnsupportedOperationException(ecdaaKeyId + " is not supported");
+            throw errorResponseFactory.badRequestException(AttestationErrorResponseType.PACKED_ERROR, ecdaaKeyId + " is not supported");
         } else {
             PublicKey publicKey = coseService.getPublicKeyFromUncompressedECPoint(authData.getCosePublicKey());
             authenticatorDataVerifier.verifyPackedSurrogateAttestationSignature(authData.getAuthDataDecoded(), clientDataHash, signature, publicKey, alg);
@@ -113,13 +123,10 @@ public class PackedAttestationProcessor implements AttestationFormatProcessor {
 
 	private List<X509Certificate> getAttestationCertificates(JsonNode attStmt) {
 		Iterator<JsonNode> i = attStmt.get("x5c").elements();
-		ArrayList<String> certificatePath = new ArrayList<String>();
+		ArrayList<String> certificatePath = new ArrayList<>();
 		while (i.hasNext()) {
 		    certificatePath.add(i.next().asText());
 		}
-		List<X509Certificate> certificates = certificateService.getCertificates(certificatePath);
-
-		return certificates;
+		return certificateService.getCertificates(certificatePath);
 	}
-
 }

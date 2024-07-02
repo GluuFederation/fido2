@@ -17,6 +17,8 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 
 /**
+ * Utility methods for base64 encoding / decoding
+ * 
  * @author Yuriy Movchan
  * @version May 08, 2020
  */

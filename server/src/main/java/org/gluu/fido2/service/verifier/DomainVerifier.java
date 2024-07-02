@@ -19,7 +19,8 @@ import java.net.URL;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.gluu.fido2.exception.Fido2RpRuntimeException;
+import org.gluu.fido2.model.error.CommonErrorResponseType;
+import org.gluu.fido2.model.error.ErrorResponseFactory;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -32,6 +33,10 @@ public class DomainVerifier {
     
     @Inject
     private CommonVerifiers commonVerifiers;
+
+    @Inject
+    private ErrorResponseFactory errorResponseFactory;
+
 
     public boolean verifyDomain(String domain, JsonNode clientDataNode) {
     	String clientDataOrigin = commonVerifiers.verifyThatFieldString(clientDataNode, "origin");
@@ -57,13 +62,14 @@ public class DomainVerifier {
             effectiveDomain = new URL(clientDataOrigin).getHost();
         } catch (MalformedURLException e) {
             //clientDataOrigin does not conform to tuple origin syntax! assuming it contains the 4th tuple element, ie. domain
+        	log.warn("MalformedURLException {}", e.getMessage());
             effectiveDomain = clientDataOrigin;
         }
 
         if (!domain.equals(effectiveDomain)) {
             //Check registrable domain suffix rule
             if (!effectiveDomain.endsWith("." + domain)) {
-                throw new Fido2RpRuntimeException("Domains don't match");
+            	throw errorResponseFactory.badRequestException(CommonErrorResponseType.INVALID_DOMAIN, "Domains don't match");
             }
         }
 
